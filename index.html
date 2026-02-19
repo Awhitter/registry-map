@@ -6,50 +6,76 @@
 <title>Catalyst AI Registry</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 <script src="https://d3js.org/d3.v7.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
+:root{--bg:#09090b;--fg:#e2e8f0;--fg-muted:#94a3b8;--fg-subtle:#64748b;--border:rgba(255,255,255,.1);--border-s:rgba(255,255,255,.05);--card:rgba(24,24,27,.5);--card-h:rgba(24,24,27,.7)}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',system-ui,sans-serif;background:#09090b;color:#e2e8f0;min-height:100vh}
-body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(rgba(255,255,255,.03) 1px,transparent 1px);background-size:24px 24px;pointer-events:none;z-index:0}
-.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:24px}
+
+@keyframes aurora{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shine{0%{transform:translateX(-100%) skewX(-20deg)}100%{transform:translateX(200%) skewX(-20deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--fg);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle at 20% 20%,rgba(56,189,248,.08),transparent 30%),radial-gradient(circle at 80% 70%,rgba(167,139,250,.08),transparent 30%),radial-gradient(rgba(255,255,255,.02) 1px,transparent 1px);background-size:200% 200%,200% 200%,24px 24px;animation:aurora 20s ease infinite;pointer-events:none;z-index:0}
+
+.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:40px 24px}
+@media(max-width:640px){.wrap{padding:24px 16px}}
+
+/* Fade-in on scroll */
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .6s cubic-bezier(.4,0,.2,1),transform .6s cubic-bezier(.4,0,.2,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
 
 /* Header */
-.hdr{display:flex;align-items:center;gap:14px;margin-bottom:24px}
-.hdr-icon{width:40px;height:40px;background:linear-gradient(135deg,#38bdf8,#818cf8);border-radius:10px;display:flex;align-items:center;justify-content:center}
-.hdr-icon svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2}
-.hdr h1{font-size:22px;font-weight:800;color:#f4f4f5}
-.hdr .sub{font-size:12px;color:#64748b;margin-top:2px}
+.hdr{display:flex;align-items:center;gap:18px;margin-bottom:12px;animation:fadeUp .8s ease}
+.hdr-icon{width:52px;height:52px;background:linear-gradient(135deg,#38bdf8,#818cf8);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 24px rgba(56,189,248,.2)}
+.hdr-icon svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:2}
+.hdr h1{font-size:30px;font-weight:900;color:#f4f4f5;letter-spacing:-.5px}
+.hdr .sub{font-size:14px;color:var(--fg-subtle);margin-top:3px;display:flex;align-items:center;gap:8px}
+.hdr .live{width:6px;height:6px;background:#4ade80;border-radius:50%;animation:pulse 2s ease infinite}
+@media(max-width:640px){.hdr h1{font-size:24px}.hdr .sub{font-size:12px}}
+
+/* Section dividers */
+.divider{display:flex;align-items:center;gap:12px;margin:40px 0 20px}
+.divider-line{height:1px;background:var(--border-s);flex-grow:1}
+.divider-label{font-size:11px;font-weight:700;color:var(--fg-subtle);text-transform:uppercase;letter-spacing:1px;white-space:nowrap}
 
 /* Stats */
-.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:24px}
-@media(max-width:800px){.stats{grid-template-columns:repeat(3,1fr)}}
-.sc{background:rgba(39,39,42,.5);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:14px;backdrop-filter:blur(12px)}
-.sc .v{font-size:26px;font-weight:800;color:#f4f4f5}
-.sc .l{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+@media(max-width:900px){.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
+.sc{background:var(--card);border:1px solid var(--border-s);border-radius:12px;padding:18px;backdrop-filter:blur(16px);position:relative;overflow:hidden;transition:all .3s}
+.sc::before{content:'';position:absolute;inset:0;background:radial-gradient(300px circle at var(--x,50%) var(--y,50%),rgba(129,140,248,.12),transparent 40%);opacity:0;transition:opacity .3s;pointer-events:none}
+.sc:hover{border-color:var(--border);transform:translateY(-2px)}
+.sc:hover::before{opacity:1}
+.sc .v{font-size:30px;font-weight:900;color:#f4f4f5;letter-spacing:-.5px}
+.sc .l{font-size:11px;color:var(--fg-subtle);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
 
 /* Cards */
-.grid2{display:grid;grid-template-columns:3fr 2fr;gap:16px;margin-bottom:16px}
-.grid2e{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:3fr 2fr;gap:20px;margin-bottom:0}
+.grid2e{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:0}
 @media(max-width:800px){.grid2,.grid2e{grid-template-columns:1fr}}
-.card{background:rgba(39,39,42,.4);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;backdrop-filter:blur(12px)}
-.card-h{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:8px}
-.card-h .dot{width:7px;height:7px;border-radius:50%}
-.card-h h2{font-size:13px;font-weight:600;color:#94a3b8}
-.card-b{padding:18px}
-.full{margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--border-s);border-radius:16px;overflow:hidden;backdrop-filter:blur(16px);transition:all .3s;position:relative}
+.card:hover{background:var(--card-h);border-color:var(--border);transform:translateY(-1px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.card-h{padding:16px 20px;border-bottom:1px solid var(--border-s);display:flex;align-items:center;gap:10px}
+.card-h .dot{width:8px;height:8px;border-radius:50%}
+.card-h h2{font-size:13px;font-weight:700;color:var(--fg-muted);letter-spacing:.3px}
+.card-b{padding:20px}
+.full{margin-bottom:0}
 
 /* Bars */
 .bar{display:flex;align-items:center;margin-bottom:5px}
-.bar-n{width:100px;font-size:11px;color:#94a3b8;text-align:right;padding-right:10px;flex-shrink:0}
-.bar-t{flex:1;height:24px;background:rgba(255,255,255,.03);border-radius:5px;overflow:hidden}
-.bar-f{height:100%;border-radius:5px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:700;color:#fff;transition:width 1s cubic-bezier(.4,0,.2,1)}
+.bar-n{width:100px;font-size:11px;color:var(--fg-muted);text-align:right;padding-right:10px;flex-shrink:0}
+.bar-t{flex:1;height:26px;background:rgba(255,255,255,.03);border-radius:6px;overflow:hidden}
+.bar-f{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:700;color:#fff;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
 
 /* Link table */
 .lt{width:100%;border-collapse:collapse;font-size:11px}
-.lt th{text-align:left;color:#64748b;font-size:9px;text-transform:uppercase;letter-spacing:.5px;padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.06)}
-.lt td{padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.03)}
+.lt th{text-align:left;color:var(--fg-subtle);font-size:9px;text-transform:uppercase;letter-spacing:.5px;padding:6px;border-bottom:1px solid var(--border-s)}
+.lt td{padding:6px;border-bottom:1px solid rgba(255,255,255,.02)}
 .lt tr:hover{background:rgba(255,255,255,.02)}
-.badge{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600}
+.badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700}
 
 /* D3 */
 #network{width:100%;height:500px;position:relative}
@@ -59,36 +85,41 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 
 /* Tag grid */
 .tg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.tc{padding:8px;border-radius:6px;text-align:center;transition:transform .15s}
-.tc:hover{transform:scale(1.05)}
-.tc .tn{font-size:11px;font-weight:600;color:#e2e8f0}
-.tc .tv{font-size:10px;color:#94a3b8;margin-top:1px}
+@media(max-width:640px){.tg{grid-template-columns:repeat(2,1fr)}}
+.tc{padding:10px;border-radius:8px;text-align:center;transition:all .2s}
+.tc:hover{transform:scale(1.05);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.tc .tn{font-size:11px;font-weight:700;color:#e2e8f0}
+.tc .tv{font-size:10px;color:var(--fg-muted);margin-top:2px}
 
 /* Donut */
-.art-row{display:flex;align-items:center;gap:20px}
-.donut-w{position:relative;width:120px;height:120px;flex-shrink:0}
+.art-row{display:flex;align-items:center;gap:24px}
+@media(max-width:640px){.art-row{flex-direction:column}}
+.donut-w{position:relative;width:130px;height:130px;flex-shrink:0}
 .donut-c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.donut-c .p{font-size:22px;font-weight:800;color:#f4f4f5}
-.donut-c .pl{font-size:9px;color:#64748b}
-.art-l{display:grid;grid-template-columns:1fr 1fr;gap:3px 14px;font-size:11px}
-.art-l .ai{display:flex;align-items:center;gap:5px}
-.art-l .ad{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.donut-c .p{font-size:24px;font-weight:900;color:#f4f4f5}
+.donut-c .pl{font-size:9px;color:var(--fg-subtle)}
+.art-l{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:11px}
+.art-l .ai{display:flex;align-items:center;gap:6px}
+.art-l .ad{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 
 /* Charts */
 .chart-wrap{height:220px;position:relative}
 
 /* Arch */
-.arch{display:flex;flex-direction:column;gap:10px}
-.arch-r{display:flex;gap:10px}
+.arch{display:flex;flex-direction:column;gap:12px}
+.arch-r{display:flex;gap:12px}
 @media(max-width:600px){.arch-r{flex-direction:column}}
-.arch-l{flex:1;background:rgba(15,15,20,.6);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:14px}
-.arch-l h3{font-size:12px;font-weight:700;margin-bottom:8px;padding-bottom:6px}
-.pills{display:flex;flex-wrap:wrap;gap:5px}
-.pill{font-size:10px;font-weight:600;padding:3px 8px;border-radius:14px;color:#09090b}
-.arch-mid{text-align:center;color:#3f3f46;font-size:11px;padding:6px 0}
+.arch-l{flex:1;background:rgba(15,15,20,.6);border:1px solid var(--border-s);border-radius:10px;padding:16px;transition:all .3s}
+.arch-l:hover{border-color:var(--border);background:rgba(15,15,20,.8)}
+.arch-l h3{font-size:12px;font-weight:800;margin-bottom:10px;padding-bottom:8px}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-size:10px;font-weight:700;padding:4px 10px;border-radius:14px;color:#09090b}
+.arch-mid{text-align:center;color:#3f3f46;font-size:11px;padding:8px 0;font-weight:600;letter-spacing:.5px}
 
 /* Footer */
-.footer{text-align:center;padding:32px 0 16px;color:#3f3f46;font-size:11px}
+.footer{text-align:center;padding:48px 0 24px;border-top:1px solid var(--border-s);margin-top:48px}
+.footer-brand{font-size:13px;font-weight:700;color:var(--fg-muted);margin-bottom:4px}
+.footer-sub{font-size:11px;color:var(--fg-subtle)}
 </style>
 </head>
 <body>
@@ -97,14 +128,17 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 <!-- HEADER -->
 <div class="hdr">
   <div class="hdr-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-linejoin="round"/></svg></div>
-  <div><h1>Catalyst AI Registry</h1><div class="sub">Mission Control · Live Data · Feb 19, 2026</div></div>
+  <div><h1>Catalyst AI Registry</h1><div class="sub"><span class="live"></span> Mission Control · Live Data · Feb 19, 2026</div></div>
 </div>
 
 <!-- STATS -->
-<div class="stats" id="stats"></div>
+<div class="stats reveal" id="stats"></div>
+
+<!-- DIVIDER -->
+<div class="divider"><div class="divider-line"></div><div class="divider-label">Registry Breakdown</div><div class="divider-line"></div></div>
 
 <!-- ENTITY BARS + LINK TABLE -->
-<div class="grid2">
+<div class="grid2 reveal">
   <div class="card">
     <div class="card-h"><div class="dot" style="background:#38bdf8"></div><h2>Entity Distribution · 735 total</h2></div>
     <div class="card-b" id="bars"></div>
@@ -115,14 +149,18 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
   </div>
 </div>
 
+<div class="divider"><div class="divider-line"></div><div class="divider-label">Entity Network</div><div class="divider-line"></div></div>
+
 <!-- D3 NETWORK GRAPH -->
-<div class="card full">
+<div class="card full reveal">
   <div class="card-h"><div class="dot" style="background:#fbbf24"></div><h2>Entity Relationship Network — Interactive Force Graph</h2></div>
   <div class="card-b"><div id="network"></div></div>
 </div>
 
+<div class="divider"><div class="divider-line"></div><div class="divider-label">Analysis</div><div class="divider-line"></div></div>
+
 <!-- DOMAIN RADAR + TOP LINKED -->
-<div class="grid2e">
+<div class="grid2e reveal">
   <div class="card">
     <div class="card-h"><div class="dot" style="background:#818cf8"></div><h2>Domain Distribution</h2></div>
     <div class="card-b"><div class="chart-wrap"><canvas id="domainChart"></canvas></div></div>
@@ -134,7 +172,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 </div>
 
 <!-- TAG COVERAGE + ARTIFACT HEALTH -->
-<div class="grid2e">
+<div class="grid2e reveal" style="margin-top:20px">
   <div class="card">
     <div class="card-h"><div class="dot" style="background:#c084fc"></div><h2>Tag Namespace Coverage</h2></div>
     <div class="card-b"><div class="tg" id="tagGrid"></div></div>
@@ -150,8 +188,10 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
   </div>
 </div>
 
+<div class="divider"><div class="divider-line"></div><div class="divider-label">Quality Metrics</div><div class="divider-line"></div></div>
+
 <!-- AVG TAGS + KB QUALITY -->
-<div class="grid2e">
+<div class="grid2e reveal">
   <div class="card">
     <div class="card-h"><div class="dot" style="background:#fb923c"></div><h2>Avg Tags per Entity Type</h2></div>
     <div class="card-b"><div class="chart-wrap"><canvas id="tagsChart"></canvas></div></div>
@@ -162,16 +202,28 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
   </div>
 </div>
 
+<div class="divider"><div class="divider-line"></div><div class="divider-label">Architecture</div><div class="divider-line"></div></div>
+
 <!-- ARCHITECTURE -->
-<div class="card full">
+<div class="card full reveal">
   <div class="card-h"><div class="dot" style="background:#e879f9"></div><h2>System Architecture</h2></div>
   <div class="card-b" id="arch"></div>
 </div>
 
-<div class="footer">Catalyst AI Registry · Higher Learning Technologies · Powered by Supabase</div>
+<div class="footer">
+  <div class="footer-brand">Catalyst AI Registry</div>
+  <div class="footer-sub">Higher Learning Technologies · Powered by Supabase · Built by Victoria</div>
+</div>
 </div>
 
 <script>
+// ─── SCROLL REVEAL ───
+const observer=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}})},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+// ─── STAT CARD MOUSE TRACKING ───
+document.querySelectorAll('.sc').forEach(el=>{el.addEventListener('mousemove',e=>{const r=el.getBoundingClientRect();el.style.setProperty('--x',(e.clientX-r.left)+'px');el.style.setProperty('--y',(e.clientY-r.top)+'px')})});
+
 const C={skill:'#38bdf8',recipe:'#4ade80',content_type:'#fbbf24',metric:'#c084fc',kb:'#f87171',style:'#a78bfa',tool:'#fb923c',prompt:'#f472b6',channel:'#60a5fa',rubric:'#a3e635',schema:'#34d399',playbook:'#2dd4bf',bundle:'#67e8f9',lint_rule:'#e879f9',agent:'#818cf8',lint_ruleset:'#eab308'};
 
 // ─── STATS ───
@@ -196,8 +248,6 @@ ltEl.innerHTML='<thead><tr><th>Type</th><th>Count</th><th></th></tr></thead><tbo
 const w=document.getElementById('network');
 const width=w.clientWidth||800, height=500;
 const svg=d3.select('#network').append('svg').attr('viewBox',`0 0 ${width} ${height}`);
-
-// Defs for gradients
 const defs=svg.append('defs');
 
 const nodes=[
@@ -230,7 +280,6 @@ const edgeData=[
 
 const edgeLinks=edgeData.map(e=>({source:e.s,target:e.t,value:e.v}));
 
-// Create gradients for each link
 edgeData.forEach((e,i)=>{
   const g=defs.append('linearGradient').attr('id','lg'+i).attr('gradientUnits','userSpaceOnUse');
   const sc=nodes.find(n=>n.id===e.s).color;
@@ -266,7 +315,6 @@ node.append('text').attr('class','node-label').attr('dy',d=>d.r+25).attr('fill',
 
 sim.on('tick',()=>{
   link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
-  // Update gradients
   edgeData.forEach((e,i)=>{
     const g=defs.select('#lg'+i);
     const sl=edgeLinks[i];
@@ -289,7 +337,7 @@ const topLinked=[{n:'Web',t:'channel',v:165},{n:'Find Skills',t:'skill',v:74},{n
 const tlEl=document.getElementById('topLinked');
 topLinked.forEach((e,i)=>{
   const d=document.createElement('div');
-  d.style.cssText='display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.03)';
+  d.style.cssText='display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.03)';
   d.innerHTML=`<span style="font-size:11px;color:#64748b;width:16px">${i+1}</span><span style="width:6px;height:6px;border-radius:50%;background:${C[e.t]};flex-shrink:0"></span><span style="font-size:11px;color:#e2e8f0;flex:1">${e.n}</span><span style="font-size:10px;color:#64748b">${e.t}</span><span style="font-size:11px;font-weight:700;color:#f4f4f5">${e.v}</span>`;
   tlEl.appendChild(d);
 });
@@ -309,7 +357,7 @@ artifacts.forEach(a=>alEl.innerHTML+=`<div class="ai"><div class="ad" style="bac
 const avgTags=[{t:'tool',v:8.8},{t:'agent',v:8.3},{t:'prompt',v:7.1},{t:'kb',v:7.1},{t:'schema',v:6.8},{t:'skill',v:6.1},{t:'content_type',v:5.6},{t:'recipe',v:4.6},{t:'style',v:4.5},{t:'metric',v:4.1},{t:'channel',v:3.8},{t:'playbook',v:3.3},{t:'rubric',v:3},{t:'lint_rule',v:3},{t:'bundle',v:2.9}];
 new Chart(document.getElementById('tagsChart'),{
   type:'bar',
-  data:{labels:avgTags.map(d=>d.t),datasets:[{data:avgTags.map(d=>d.v),backgroundColor:avgTags.map(d=>(C[d.t]||'#666')+'cc'),borderRadius:3}]},
+  data:{labels:avgTags.map(d=>d.t),datasets:[{data:avgTags.map(d=>d.v),backgroundColor:avgTags.map(d=>(C[d.t]||'#666')+'cc'),borderRadius:4}]},
   options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#64748b',font:{size:9}}},y:{grid:{display:false},ticks:{color:'#94a3b8',font:{size:9}}}},plugins:{legend:{display:false}}}
 });
 
