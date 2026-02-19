@@ -3,137 +3,149 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Catalyst AI Registry</title>
+<title>Catalyst AI Registry — Mission Control</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#09090b;--fg:#e2e8f0;--fg-muted:#94a3b8;--fg-subtle:#64748b;--border:rgba(255,255,255,.1);--border-s:rgba(255,255,255,.05);--card:rgba(24,24,27,.5);--card-h:rgba(24,24,27,.7);--spring:.16,1,.3,1}
+:root{--bg:#09090b;--fg:#e2e8f0;--fg-muted:#94a3b8;--fg-subtle:#64748b;--border:rgba(255,255,255,.1);--border-s:rgba(255,255,255,.05);--card:rgba(24,24,27,.5);--card-h:rgba(24,24,27,.7)}
 *{margin:0;padding:0;box-sizing:border-box}
-
 @keyframes aurora{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes shine{0%{transform:translateX(-100%) skewX(-20deg)}100%{transform:translateX(200%) skewX(-20deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(74,222,128,.7)}50%{opacity:.6}70%{box-shadow:0 0 0 6px rgba(74,222,128,0)}}
-
 html{scroll-behavior:smooth}
 body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--fg);min-height:100vh;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle at 15% 25%,rgba(56,189,248,.12),transparent 40%),radial-gradient(circle at 85% 65%,rgba(167,139,250,.12),transparent 40%),radial-gradient(circle at 50% 90%,rgba(244,114,182,.07),transparent 50%),radial-gradient(rgba(255,255,255,.02) 1px,transparent 1px);background-size:200% 200%,200% 200%,200% 200%,24px 24px;animation:aurora 20s ease infinite;pointer-events:none;z-index:0}
-
-.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:40px 24px}
+.wrap{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:40px 24px}
 @media(max-width:640px){.wrap{padding:24px 16px}}
-
-/* Fade-in on scroll */
 .reveal{opacity:0;transform:translateY(20px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
 .reveal.visible{opacity:1;transform:translateY(0)}
 
 /* Header */
-.hdr{display:flex;align-items:center;gap:18px;margin-bottom:12px;animation:fadeUp .8s ease}
-.hdr-icon{width:52px;height:52px;background:linear-gradient(135deg,#38bdf8,#818cf8);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 10px 30px -10px rgba(56,189,248,.4),0 4px 6px -4px rgba(56,189,248,.2)}
+.hdr{display:flex;align-items:center;gap:18px;margin-bottom:8px;animation:fadeUp .8s cubic-bezier(.16,1,.3,1) backwards}
+.hdr-icon{width:52px;height:52px;background:linear-gradient(135deg,#38bdf8,#818cf8);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 10px 30px -10px rgba(56,189,248,.4)}
 .hdr-icon svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:2}
 .hdr h1{font-size:30px;font-weight:900;color:#f4f4f5;letter-spacing:-.5px}
 .hdr .sub{font-size:14px;color:var(--fg-subtle);margin-top:3px;display:flex;align-items:center;gap:8px}
 .hdr .live{width:6px;height:6px;background:#4ade80;border-radius:50%;animation:pulse 2s ease infinite}
-@media(max-width:640px){.hdr h1{font-size:24px}.hdr .sub{font-size:12px}}
+.hdr-desc{font-size:12px;color:var(--fg-subtle);max-width:800px;line-height:1.6;margin-bottom:16px;animation:fadeUp 1s .2s cubic-bezier(.16,1,.3,1) backwards}
 
-/* Section dividers */
+/* Dividers */
 .divider{display:flex;align-items:center;gap:12px;margin:40px 0 20px}
 .divider-line{height:1px;background:var(--border-s);flex-grow:1}
 .divider-label{font-size:11px;font-weight:700;color:var(--fg-subtle);text-transform:uppercase;letter-spacing:1px;white-space:nowrap}
 
 /* Stats */
-.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
-@media(max-width:900px){.stats{grid-template-columns:repeat(3,1fr)}}
+.stats{display:grid;grid-template-columns:repeat(8,1fr);gap:12px}
+@media(max-width:900px){.stats{grid-template-columns:repeat(4,1fr)}}
 @media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
-.sc{background:var(--card);border:1px solid var(--border-s);border-radius:12px;padding:18px;backdrop-filter:blur(16px);position:relative;overflow:hidden;transition:all .3s}
-.sc::before{content:'';position:absolute;inset:0;background:radial-gradient(300px circle at var(--x,50%) var(--y,50%),rgba(129,140,248,.12),transparent 40%);opacity:0;transition:opacity .3s;pointer-events:none}
-.sc:hover{border-color:var(--border);transform:translateY(-2px)}
-.sc:hover::before{opacity:1}
-.sc .v{font-size:30px;font-weight:900;color:#f4f4f5;letter-spacing:-.5px}
-.sc .l{font-size:11px;color:var(--fg-subtle);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.sc{background:var(--card);border:1px solid var(--border-s);border-radius:12px;padding:14px;backdrop-filter:blur(16px);position:relative;overflow:hidden;transition:all .3s}
+.sc::before{content:'';position:absolute;inset:0;background:radial-gradient(300px circle at var(--x,50%) var(--y,50%),rgba(129,140,248,.12),transparent 40%);opacity:0;transition:opacity .4s;pointer-events:none}
+.sc:hover{border-color:var(--border);transform:translateY(-2px)}.sc:hover::before{opacity:1}
+.sc .v{font-size:24px;font-weight:900;color:#f4f4f5;letter-spacing:-.5px}
+.sc .l{font-size:9px;color:var(--fg-subtle);text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
 
 /* Cards */
-.grid2{display:grid;grid-template-columns:3fr 2fr;gap:20px;margin-bottom:0}
-.grid2e{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:0}
-@media(max-width:800px){.grid2,.grid2e{grid-template-columns:1fr}}
-.card{background:var(--card);border:1px solid var(--border-s);border-radius:16px;overflow:hidden;backdrop-filter:blur(16px);transition:all .3s;position:relative}
-.card:hover{background:var(--card-h);border-color:var(--border);transform:translateY(-1px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
-.card-h{padding:16px 20px;border-bottom:1px solid var(--border-s);display:flex;align-items:center;gap:10px}
-.card-h .dot{width:8px;height:8px;border-radius:50%}
-.card-h h2{font-size:13px;font-weight:700;color:var(--fg-muted);letter-spacing:.3px}
-.card-b{padding:20px}
-.full{margin-bottom:0}
+.grid2{display:grid;grid-template-columns:3fr 2fr;gap:16px}
+.grid2e{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:800px){.grid2,.grid2e,.grid3{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--border-s);border-radius:14px;overflow:hidden;backdrop-filter:blur(16px);transition:all .3s}
+.card:hover{background:var(--card-h);border-color:var(--border)}
+.card-h{padding:14px 18px;border-bottom:1px solid var(--border-s);display:flex;align-items:center;gap:8px}
+.card-h .dot{width:7px;height:7px;border-radius:50%}
+.card-h h2{font-size:12px;font-weight:700;color:var(--fg-muted);letter-spacing:.3px}
+.card-b{padding:16px}
+.full{width:100%}
+.mt{margin-top:16px}
 
 /* Bars */
-.bar{display:flex;align-items:center;margin-bottom:5px}
-.bar-n{width:100px;font-size:11px;color:var(--fg-muted);text-align:right;padding-right:10px;flex-shrink:0}
-.bar-t{flex:1;height:26px;background:rgba(255,255,255,.03);border-radius:6px;overflow:hidden}
-.bar-f{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:700;color:#fff;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.bar{display:flex;align-items:center;margin-bottom:4px}
+.bar-n{width:90px;font-size:10px;color:var(--fg-muted);text-align:right;padding-right:8px;flex-shrink:0}
+.bar-t{flex:1;height:22px;background:rgba(255,255,255,.03);border-radius:5px;overflow:hidden}
+.bar-f{height:100%;border-radius:5px;display:flex;align-items:center;padding-left:7px;font-size:9px;font-weight:700;color:#fff;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
 
-/* Link table */
-.lt{width:100%;border-collapse:collapse;font-size:11px}
-.lt th{text-align:left;color:var(--fg-subtle);font-size:9px;text-transform:uppercase;letter-spacing:.5px;padding:6px;border-bottom:1px solid var(--border-s)}
-.lt td{padding:6px;border-bottom:1px solid rgba(255,255,255,.02)}
+/* Tables */
+.lt{width:100%;border-collapse:collapse;font-size:10px}
+.lt th{text-align:left;color:var(--fg-subtle);font-size:8px;text-transform:uppercase;letter-spacing:.5px;padding:5px 6px;border-bottom:1px solid var(--border-s)}
+.lt td{padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.02)}
 .lt tr:hover{background:rgba(255,255,255,.02)}
-.badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700}
+.badge{display:inline-block;padding:1px 6px;border-radius:3px;font-size:8px;font-weight:700}
 
 /* D3 */
 #network{width:100%;height:500px;position:relative}
 #network svg{width:100%;height:100%}
 .node-label{font-size:10px;fill:#e2e8f0;font-weight:600;pointer-events:none;text-anchor:middle}
-.tooltip{position:absolute;background:rgba(24,24,27,.95);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 14px;font-size:11px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:10;backdrop-filter:blur(8px)}
-
-/* Tag grid */
-.tg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-@media(max-width:640px){.tg{grid-template-columns:repeat(2,1fr)}}
-.tc{padding:10px;border-radius:8px;text-align:center;transition:all .2s}
-.tc:hover{transform:scale(1.05);box-shadow:0 4px 16px rgba(0,0,0,.3)}
-.tc .tn{font-size:11px;font-weight:700;color:#e2e8f0}
-.tc .tv{font-size:10px;color:var(--fg-muted);margin-top:2px}
-
-/* Donut */
-.art-row{display:flex;align-items:center;gap:24px}
-@media(max-width:640px){.art-row{flex-direction:column}}
-.donut-w{position:relative;width:130px;height:130px;flex-shrink:0}
-.donut-c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.donut-c .p{font-size:24px;font-weight:900;color:#f4f4f5}
-.donut-c .pl{font-size:9px;color:var(--fg-subtle)}
-.art-l{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:11px}
-.art-l .ai{display:flex;align-items:center;gap:6px}
-.art-l .ad{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 
 /* Charts */
-.chart-wrap{height:220px;position:relative}
+.chart-wrap{height:200px;position:relative}
 
-/* Arch */
-.arch{display:flex;flex-direction:column;gap:12px}
-.arch-r{display:flex;gap:12px}
-@media(max-width:600px){.arch-r{flex-direction:column}}
-.arch-l{flex:1;background:rgba(15,15,20,.6);border:1px solid var(--border-s);border-radius:10px;padding:16px;transition:all .3s}
-.arch-l:hover{border-color:var(--border);background:rgba(15,15,20,.8)}
-.arch-l h3{font-size:12px;font-weight:800;margin-bottom:10px;padding-bottom:8px}
-.pills{display:flex;flex-wrap:wrap;gap:6px}
-.pill{font-size:10px;font-weight:700;padding:4px 10px;border-radius:14px;color:#09090b}
-.arch-mid{text-align:center;color:#3f3f46;font-size:11px;padding:8px 0;font-weight:600;letter-spacing:.5px}
+/* Tag grid */
+.tg{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+@media(max-width:640px){.tg{grid-template-columns:repeat(2,1fr)}}
+.tc{padding:8px;border-radius:6px;text-align:center;transition:all .2s}
+.tc:hover{transform:scale(1.05)}
+.tc .tn{font-size:10px;font-weight:700;color:#e2e8f0}
+.tc .tv{font-size:9px;color:var(--fg-muted);margin-top:1px}
 
-/* Footer */
-.footer{text-align:center;padding:48px 0 24px;border-top:1px solid var(--border-s);margin-top:48px}
-.footer-brand{font-size:13px;font-weight:700;color:var(--fg-muted);margin-bottom:4px}
-.footer-sub{font-size:11px;color:var(--fg-subtle)}
+/* Donut */
+.art-row{display:flex;align-items:center;gap:20px}
+@media(max-width:640px){.art-row{flex-direction:column}}
+.donut-w{position:relative;width:120px;height:120px;flex-shrink:0}
+.donut-c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.donut-c .p{font-size:22px;font-weight:900;color:#f4f4f5}
+.donut-c .pl{font-size:9px;color:var(--fg-subtle)}
+.art-l{display:grid;grid-template-columns:1fr 1fr;gap:3px 14px;font-size:10px}
+.art-l .ai{display:flex;align-items:center;gap:5px}
+.art-l .ad{width:5px;height:5px;border-radius:50%;flex-shrink:0}
 
-/* Units reference grid */
-.units-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+/* Unit cards */
+.units-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 @media(max-width:1000px){.units-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:640px){.units-grid{grid-template-columns:1fr}}
-.unit-card{background:var(--card);border:1px solid var(--border-s);border-radius:14px;padding:20px;transition:all .3s;position:relative;overflow:hidden}
-.unit-card:hover{background:var(--card-h);border-color:var(--border);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
-.unit-card .uc-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.unit-card .uc-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-.unit-card .uc-name{font-size:14px;font-weight:800;color:#f4f4f5}
-.unit-card .uc-count{font-size:11px;font-weight:700;color:var(--fg-subtle);margin-left:auto}
-.unit-card .uc-desc{font-size:11px;color:var(--fg-muted);line-height:1.5;margin-bottom:10px}
-.unit-card .uc-meta{display:flex;flex-wrap:wrap;gap:4px}
-.unit-card .uc-tag{font-size:9px;font-weight:600;padding:2px 6px;border-radius:3px;background:rgba(255,255,255,.05);color:var(--fg-subtle)}
+.uc{background:var(--card);border:1px solid var(--border-s);border-radius:12px;padding:16px;transition:all .3s;overflow:hidden}
+.uc:hover{background:var(--card-h);border-color:var(--border);transform:translateY(-2px)}
+.uc-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.uc-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.uc-name{font-size:13px;font-weight:800;color:#f4f4f5}
+.uc-count{font-size:10px;font-weight:700;color:var(--fg-subtle);margin-left:auto}
+.uc-desc{font-size:10px;color:var(--fg-muted);line-height:1.5;margin-bottom:8px}
+.uc-items{font-size:9px;color:var(--fg-subtle);line-height:1.6;border-top:1px solid var(--border-s);padding-top:6px;margin-top:auto}
+.uc-items strong{color:var(--fg-muted)}
+.uc-tag{display:inline-block;font-size:8px;font-weight:600;padding:1px 5px;border-radius:3px;background:rgba(255,255,255,.05);color:var(--fg-subtle);margin:1px}
+
+/* Agent cards */
+.agent-card{background:var(--card);border:1px solid var(--border-s);border-radius:12px;padding:16px;transition:all .3s}
+.agent-card:hover{border-color:var(--border)}
+.agent-name{font-size:13px;font-weight:800;color:#f4f4f5;margin-bottom:2px}
+.agent-role{font-size:10px;color:var(--fg-subtle);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.agent-voice{font-size:10px;color:var(--fg-muted);font-style:italic;line-height:1.4}
+
+/* App cards */
+.app-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.02)}
+.app-tier{font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px}
+
+/* Pipeline */
+.pipe{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.pipe-step{background:rgba(255,255,255,.04);border:1px solid var(--border-s);border-radius:8px;padding:8px 12px;font-size:10px;color:var(--fg-muted);font-weight:600;text-align:center;min-width:80px}
+.pipe-arrow{color:var(--fg-subtle);font-size:12px}
+
+/* Arch */
+.arch{display:flex;flex-direction:column;gap:10px}
+.arch-r{display:flex;gap:10px}
+@media(max-width:600px){.arch-r{flex-direction:column}}
+.arch-l{flex:1;background:rgba(15,15,20,.6);border:1px solid var(--border-s);border-radius:8px;padding:14px;transition:all .3s}
+.arch-l:hover{border-color:var(--border)}
+.arch-l h3{font-size:11px;font-weight:800;margin-bottom:8px;padding-bottom:6px}
+.pills{display:flex;flex-wrap:wrap;gap:4px}
+.pill{font-size:9px;font-weight:700;padding:3px 8px;border-radius:12px;color:#09090b}
+.arch-mid{text-align:center;color:#3f3f46;font-size:10px;padding:6px 0;font-weight:600;letter-spacing:.5px}
+
+/* Footer */
+.footer{text-align:center;padding:40px 0 20px;border-top:1px solid var(--border-s);margin-top:40px}
+.footer-brand{font-size:12px;font-weight:700;color:var(--fg-muted);margin-bottom:3px}
+.footer-sub{font-size:10px;color:var(--fg-subtle)}
+.footer-tables{font-size:9px;color:#27272a;margin-top:8px}
 </style>
 </head>
 <body>
@@ -144,55 +156,118 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
   <div class="hdr-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-linejoin="round"/></svg></div>
   <div><h1>Catalyst AI Registry</h1><div class="sub"><span class="live"></span> Mission Control · Live Data · Feb 19, 2026</div></div>
 </div>
+<div class="hdr-desc">The modular AI content factory for Higher Learning Technologies. 16 atomic unit types compose into workflows that research, draft, evaluate, and publish content across 208 test prep apps and 27 distribution channels. Everything is wired through Supabase with 87 database tables.</div>
 
 <!-- STATS -->
 <div class="stats reveal" id="stats"></div>
 
-<!-- DIVIDER -->
 <div class="divider"><div class="divider-line"></div><div class="divider-label">Registry Breakdown</div><div class="divider-line"></div></div>
 
 <!-- ENTITY BARS + LINK TABLE -->
 <div class="grid2 reveal">
   <div class="card">
-    <div class="card-h"><div class="dot" style="background:#38bdf8"></div><h2>Entity Distribution · 735 total</h2></div>
+    <div class="card-h"><div class="dot" style="background:#38bdf8"></div><h2>Entity Distribution · 746 entities across 16 types</h2></div>
     <div class="card-b" id="bars"></div>
   </div>
   <div class="card">
-    <div class="card-h"><div class="dot" style="background:#4ade80"></div><h2>Link Graph · 2,425 connections</h2></div>
+    <div class="card-h"><div class="dot" style="background:#4ade80"></div><h2>Link Graph · 2,425 connections · 12 link types</h2></div>
     <div class="card-b"><table class="lt" id="ltable"></table></div>
+  </div>
+</div>
+
+<div class="divider"><div class="divider-line"></div><div class="divider-label">How It Works — Content Pipeline</div><div class="divider-line"></div></div>
+
+<!-- PIPELINE FLOW -->
+<div class="card full reveal">
+  <div class="card-h"><div class="dot" style="background:#fbbf24"></div><h2>Playbook Execution Model — Guided Multi-Step Workflows</h2></div>
+  <div class="card-b">
+    <div class="pipe">
+      <div class="pipe-step" style="border-color:#38bdf844"><div style="font-size:14px;margin-bottom:3px">🔍</div>Discover<div style="font-size:8px;color:#64748b;margin-top:2px">Skills + Tools</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step" style="border-color:#4ade8044"><div style="font-size:14px;margin-bottom:3px">📝</div>Draft<div style="font-size:8px;color:#64748b;margin-top:2px">Prompts + Agents</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step" style="border-color:#fbbf2444"><div style="font-size:14px;margin-bottom:3px">🎨</div>Generate<div style="font-size:8px;color:#64748b;margin-top:2px">Tools (image/code)</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step" style="border-color:#c084fc44"><div style="font-size:14px;margin-bottom:3px">✅</div>Evaluate<div style="font-size:8px;color:#64748b;margin-top:2px">Rubrics + Metrics</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step" style="border-color:#f8717144"><div style="font-size:14px;margin-bottom:3px">📡</div>Publish<div style="font-size:8px;color:#64748b;margin-top:2px">Channels + Styles</div></div>
+    </div>
+    <div style="font-size:10px;color:var(--fg-subtle);line-height:1.6;margin-top:8px">
+      <strong style="color:var(--fg-muted)">Example — Blog Production Playbook:</strong> Research Trends skill → Tavily Search tool → Ivy (Editor agent) drafts with Blog Post System Prompt → Content Quality rubric scores it → Publish to Web channel.<br>
+      <strong style="color:var(--fg-muted)">Example — Study Guide Production:</strong> Craft Study Guide skill → Tavily + Firecrawl tools → Lucy (Lesson Planner agent) drafts with Study Guide + Learning Objectives prompts → Fal image generation → CodeSandbox interactive demo → Content Quality rubric.<br>
+      <strong style="color:var(--fg-muted)">13 Playbooks:</strong> Blog Production, Study Guide Production, Create Skill From Template, Generate Factory Template, Import Pack Review, Registry Health Scan, Run Golden Tests, Suggest Links, Sync MCP Catalog, Test MCP Connections, Validate Schemas, Upgrade Screen A/B Test, Refresh Embeddings
+    </div>
   </div>
 </div>
 
 <div class="divider"><div class="divider-line"></div><div class="divider-label">Entity Network</div><div class="divider-line"></div></div>
 
-<!-- D3 NETWORK GRAPH -->
+<!-- D3 NETWORK -->
 <div class="card full reveal">
-  <div class="card-h"><div class="dot" style="background:#fbbf24"></div><h2>Entity Relationship Network — Interactive Force Graph</h2></div>
+  <div class="card-h"><div class="dot" style="background:#818cf8"></div><h2>Entity Relationship Network — Interactive Force Graph (drag nodes)</h2></div>
   <div class="card-b"><div id="network"></div></div>
 </div>
 
-<div class="divider"><div class="divider-line"></div><div class="divider-label">Analysis</div><div class="divider-line"></div></div>
+<div class="divider"><div class="divider-line"></div><div class="divider-label">The 16 Atomic Unit Types</div><div class="divider-line"></div></div>
 
-<!-- DOMAIN RADAR + TOP LINKED -->
+<!-- ATOMIC UNITS -->
+<div class="units-grid reveal" id="unitsGrid"></div>
+
+<div class="divider"><div class="divider-line"></div><div class="divider-label">The 6 AI Agent Personas</div><div class="divider-line"></div></div>
+
+<!-- AGENTS -->
+<div class="grid3 reveal" id="agentsGrid"></div>
+
+<div class="divider"><div class="divider-line"></div><div class="divider-label">Content Type Families · 113 Types</div><div class="divider-line"></div></div>
+
+<!-- CONTENT TYPE FAMILIES + TOP APPS -->
+<div class="grid2 reveal">
+  <div class="card">
+    <div class="card-h"><div class="dot" style="background:#fbbf24"></div><h2>Content Families — What Gets Made</h2></div>
+    <div class="card-b"><div class="chart-wrap"><canvas id="familyChart"></canvas></div></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><div class="dot" style="background:#f87171"></div><h2>Top Apps by Revenue Share — Who It's For</h2></div>
+    <div class="card-b" id="appsList"></div>
+  </div>
+</div>
+
+<div class="divider"><div class="divider-line"></div><div class="divider-label">Tools & Infrastructure</div><div class="divider-line"></div></div>
+
+<!-- TOOLS + SCHEMAS -->
+<div class="grid2e reveal">
+  <div class="card">
+    <div class="card-h"><div class="dot" style="background:#fb923c"></div><h2>42 Tools by Type & Provider</h2></div>
+    <div class="card-b" id="toolsList"></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><div class="dot" style="background:#34d399"></div><h2>21 Output Schemas — Shape Contracts</h2></div>
+    <div class="card-b" id="schemasList"></div>
+  </div>
+</div>
+
+<div class="divider"><div class="divider-line"></div><div class="divider-label">Analysis & Quality</div><div class="divider-line"></div></div>
+
+<!-- DOMAIN + TOP LINKED -->
 <div class="grid2e reveal">
   <div class="card">
     <div class="card-h"><div class="dot" style="background:#818cf8"></div><h2>Domain Distribution</h2></div>
     <div class="card-b"><div class="chart-wrap"><canvas id="domainChart"></canvas></div></div>
   </div>
   <div class="card">
-    <div class="card-h"><div class="dot" style="background:#f87171"></div><h2>Most Connected Entities</h2></div>
+    <div class="card-h"><div class="dot" style="background:#f87171"></div><h2>Most Connected Entities (Hub Nodes)</h2></div>
     <div class="card-b" id="topLinked"></div>
   </div>
 </div>
 
-<!-- TAG COVERAGE + ARTIFACT HEALTH -->
-<div class="grid2e reveal" style="margin-top:20px">
+<!-- TAGS + ARTIFACTS -->
+<div class="grid2e reveal mt">
   <div class="card">
-    <div class="card-h"><div class="dot" style="background:#c084fc"></div><h2>Tag Namespace Coverage</h2></div>
+    <div class="card-h"><div class="dot" style="background:#c084fc"></div><h2>31 Tag Namespaces · Taxonomy System</h2></div>
     <div class="card-b"><div class="tg" id="tagGrid"></div></div>
   </div>
   <div class="card">
-    <div class="card-h"><div class="dot" style="background:#2dd4bf"></div><h2>Artifact Health · 52.5%</h2></div>
+    <div class="card-h"><div class="dot" style="background:#2dd4bf"></div><h2>Artifact Health · 52.5% Coverage</h2></div>
     <div class="card-b">
       <div class="art-row">
         <div class="donut-w"><canvas id="donut"></canvas><div class="donut-c"><div class="p">52.5%</div><div class="pl">with artifacts</div></div></div>
@@ -202,78 +277,80 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
   </div>
 </div>
 
-<div class="divider"><div class="divider-line"></div><div class="divider-label">Quality Metrics</div><div class="divider-line"></div></div>
-
-<!-- AVG TAGS + KB QUALITY -->
-<div class="grid2e reveal">
+<!-- KB QUALITY + AVG TAGS -->
+<div class="grid2e reveal mt">
+  <div class="card">
+    <div class="card-h"><div class="dot" style="background:#f472b6"></div><h2>KB Quality — 192 Variants · 3 Depth Tiers</h2></div>
+    <div class="card-b"><div class="chart-wrap"><canvas id="kbChart"></canvas></div></div>
+  </div>
   <div class="card">
     <div class="card-h"><div class="dot" style="background:#fb923c"></div><h2>Avg Tags per Entity Type</h2></div>
     <div class="card-b"><div class="chart-wrap"><canvas id="tagsChart"></canvas></div></div>
   </div>
-  <div class="card">
-    <div class="card-h"><div class="dot" style="background:#f472b6"></div><h2>KB Variant Depth (avg chars)</h2></div>
-    <div class="card-b"><div class="chart-wrap"><canvas id="kbChart"></canvas></div></div>
+</div>
+
+<div class="divider"><div class="divider-line"></div><div class="divider-label">System Architecture</div><div class="divider-line"></div></div>
+
+<!-- SYSTEM STATS -->
+<div class="card full reveal">
+  <div class="card-h"><div class="dot" style="background:#60a5fa"></div><h2>Runtime System — Execution Engine</h2></div>
+  <div class="card-b">
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px" id="sysStats"></div>
+    <div style="font-size:10px;color:var(--fg-subtle);line-height:1.6">
+      <strong style="color:var(--fg-muted)">87 database tables</strong> power the system: registry_entities is the core identity table, linked through entity_links, entity_tags, entity_revisions, and entity_embeddings. The execution engine tracks runs (75 recorded), run_steps, run_decisions, run_tool_calls, and run_outputs. Factory templates (10) generate new entities. The evaluation layer stores evaluations (40), pairwise_comparisons, and entity_eval_signals. Content operations flow through campaigns (4), automations (13), publish_events, and calendar_items. Novu handles notification delivery with 4 dedicated tables.
+    </div>
   </div>
 </div>
 
-<div class="divider"><div class="divider-line"></div><div class="divider-label">Architecture</div><div class="divider-line"></div></div>
-
-<!-- ARCHITECTURE -->
-<div class="card full reveal">
-  <div class="card-h"><div class="dot" style="background:#e879f9"></div><h2>System Architecture</h2></div>
+<!-- ARCHITECTURE DIAGRAM -->
+<div class="card full reveal mt">
+  <div class="card-h"><div class="dot" style="background:#e879f9"></div><h2>Layer Architecture</h2></div>
   <div class="card-b" id="arch"></div>
 </div>
 
-<div class="divider"><div class="divider-line"></div><div class="divider-label">The 16 Atomic Units</div><div class="divider-line"></div></div>
-
-<div class="units-grid reveal" id="unitsGrid"></div>
-
 <div class="footer">
-  <div class="footer-brand">Catalyst AI Registry</div>
-  <div class="footer-sub">Higher Learning Technologies · Powered by Supabase · Built by Victoria</div>
+  <div class="footer-brand">Catalyst AI Registry · Higher Learning Technologies</div>
+  <div class="footer-sub">Powered by Supabase · 87 Tables · 746 Entities · 2,425 Links · Built by Victoria</div>
+  <div class="footer-tables">registry_entities · entity_links · entity_tags · entity_revisions · skills · tools · prompts · kb_items · kb_variants · content_types · recipes · schemas · styles · channels · rubrics · metrics · bundles · playbooks · agents · runs · evaluations · apps</div>
 </div>
 </div>
 
 <script>
-// ─── SCROLL REVEAL ───
-const observer=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}})},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
+const observer=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}})},{threshold:0.08,rootMargin:'0px 0px -30px 0px'});
 document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
-
-// ─── STAT CARD MOUSE TRACKING ───
 document.querySelectorAll('.sc').forEach(el=>{el.addEventListener('mousemove',e=>{const r=el.getBoundingClientRect();el.style.setProperty('--x',(e.clientX-r.left)+'px');el.style.setProperty('--y',(e.clientY-r.top)+'px')})});
 
 const C={skill:'#38bdf8',recipe:'#4ade80',content_type:'#fbbf24',metric:'#c084fc',kb:'#f87171',style:'#a78bfa',tool:'#fb923c',prompt:'#f472b6',channel:'#60a5fa',rubric:'#a3e635',schema:'#34d399',playbook:'#2dd4bf',bundle:'#67e8f9',lint_rule:'#e879f9',agent:'#818cf8',lint_ruleset:'#eab308'};
 
 // ─── STATS ───
-const stats=[{l:'Entities',v:735},{l:'Types',v:16},{l:'Links',v:2425},{l:'Apps',v:208},{l:'Revisions',v:1620},{l:'Artifacts',v:850}];
+const stats=[{l:'Entities',v:746},{l:'Types',v:16},{l:'Links',v:2425},{l:'Apps',v:208},{l:'Tables',v:87},{l:'Revisions',v:1620},{l:'KB Variants',v:192},{l:'Runs',v:75}];
 const sEl=document.getElementById('stats');
 stats.forEach(s=>{const d=document.createElement('div');d.className='sc';d.innerHTML=`<div class="v" data-t="${s.v}">0</div><div class="l">${s.l}</div>`;sEl.appendChild(d)});
 function animV(el,end){let st=null;const step=ts=>{if(!st)st=ts;const p=Math.min((ts-st)/1200,1);el.textContent=Math.floor(p*end).toLocaleString();if(p<1)requestAnimationFrame(step);else el.textContent=end.toLocaleString()};requestAnimationFrame(step)}
 document.querySelectorAll('.v[data-t]').forEach(el=>animV(el,+el.dataset.t));
 
 // ─── ENTITY BARS ───
-const entities=[{n:'Skills',v:160,c:C.skill},{n:'Recipes',v:118,c:C.recipe},{n:'Content Types',v:113,c:C.content_type},{n:'Metrics',v:55,c:C.metric},{n:'KB Items',v:54,c:C.kb},{n:'Styles',v:48,c:C.style},{n:'Tools',v:42,c:C.tool},{n:'Prompts',v:31,c:C.prompt},{n:'Channels',v:27,c:C.channel},{n:'Rubrics',v:25,c:C.rubric},{n:'Schemas',v:21,c:C.schema},{n:'Playbooks',v:13,c:C.playbook},{n:'Bundles',v:11,c:C.bundle},{n:'Lint Rules',v:8,c:C.lint_rule},{n:'Agents',v:6,c:C.agent},{n:'Lint Rulesets',v:3,c:C.lint_ruleset}];
+const entities=[{n:'Skills',v:160,c:C.skill,s:'152 published, 8 staged'},{n:'Recipes',v:118,c:C.recipe},{n:'Content Types',v:113,c:C.content_type},{n:'KB Items',v:64,c:C.kb},{n:'Metrics',v:55,c:C.metric},{n:'Styles',v:48,c:C.style},{n:'Tools',v:42,c:C.tool,s:'39 published, 3 staged'},{n:'Prompts',v:31,c:C.prompt},{n:'Channels',v:27,c:C.channel},{n:'Rubrics',v:25,c:C.rubric},{n:'Schemas',v:21,c:C.schema},{n:'Playbooks',v:13,c:C.playbook},{n:'Bundles',v:11,c:C.bundle},{n:'Lint Rules',v:8,c:C.lint_rule},{n:'Agents',v:6,c:C.agent},{n:'Lint Rulesets',v:3,c:C.lint_ruleset}];
 const bEl=document.getElementById('bars');
 entities.forEach((e,i)=>{const d=document.createElement('div');d.className='bar';d.innerHTML=`<div class="bar-n">${e.n}</div><div class="bar-t"><div class="bar-f" style="width:0%;background:${e.c}">${e.v}</div></div>`;bEl.appendChild(d);setTimeout(()=>d.querySelector('.bar-f').style.width=`${(e.v/160)*100}%`,80+i*40)});
 
 // ─── LINK TABLE ───
-const links=[{t:'requires',v:714,c:'#ef4444'},{t:'recommends',v:555,c:'#3b82f6'},{t:'related',v:506,c:'#6b7280'},{t:'uses_tool',v:210,c:'#fb923c'},{t:'uses_prompt',v:125,c:'#a78bfa'},{t:'bundle_member',v:107,c:'#d946ef'},{t:'uses_kb',v:70,c:'#60a5fa'},{t:'alternate',v:67,c:'#78716c'},{t:'pairs_with',v:59,c:'#ec4899'},{t:'often_follows',v:9,c:'#84cc16'},{t:'prerequisite',v:2,c:'#fca5a5'},{t:'parent',v:1,c:'#5eead4'}];
+const links=[{t:'requires',v:714,c:'#ef4444',d:'recipe→style/schema/channel, content_type→recipe/style/channel'},{t:'recommends',v:555,c:'#3b82f6',d:'content_type→metric/rubric, kb→channel/style'},{t:'related',v:506,c:'#6b7280',d:'skill↔skill, kb↔kb, recipe↔content_type'},{t:'uses_tool',v:210,c:'#fb923c',d:'content_type→tool, skill→tool'},{t:'uses_prompt',v:125,c:'#a78bfa',d:'content_type→prompt, playbook→prompt'},{t:'bundle_member',v:107,c:'#d946ef',d:'playbook→bundle, tool→bundle, kb→bundle'},{t:'uses_kb',v:70,c:'#60a5fa',d:'skill→kb'},{t:'alternate',v:69,c:'#78716c',d:'skill↔skill'},{t:'pairs_with',v:37,c:'#ec4899',d:'skill↔skill, kb↔kb'},{t:'often_follows',v:9,c:'#84cc16'},{t:'prerequisite',v:2,c:'#fca5a5'},{t:'parent',v:1,c:'#5eead4'}];
 const ltEl=document.getElementById('ltable');
-ltEl.innerHTML='<thead><tr><th>Type</th><th>Count</th><th></th></tr></thead><tbody>'+links.map(l=>`<tr><td><span class="badge" style="background:${l.c}22;color:${l.c}">${l.t}</span></td><td style="color:#f4f4f5;font-weight:600">${l.v}</td><td><div style="width:${(l.v/714)*100}%;height:4px;background:${l.c};border-radius:2px;min-width:3px"></div></td></tr>`).join('')+'</tbody>';
+ltEl.innerHTML='<thead><tr><th>Link Type</th><th>Count</th><th>Key Patterns</th></tr></thead><tbody>'+links.map(l=>`<tr><td><span class="badge" style="background:${l.c}22;color:${l.c}">${l.t}</span></td><td style="color:#f4f4f5;font-weight:600">${l.v}</td><td style="color:#64748b;font-size:8px">${l.d||''}</td></tr>`).join('')+'</tbody>';
 
 // ─── D3 FORCE NETWORK ───
 (function(){
 const w=document.getElementById('network');
-const width=w.clientWidth||800, height=500;
+const width=w.clientWidth||800,height=500;
 const svg=d3.select('#network').append('svg').attr('viewBox',`0 0 ${width} ${height}`);
 const defs=svg.append('defs');
-
 const nodes=[
   {id:'content_type',label:'Content Types',count:113,color:C.content_type,r:30},
   {id:'skill',label:'Skills',count:160,color:C.skill,r:35},
   {id:'recipe',label:'Recipes',count:118,color:C.recipe,r:28},
   {id:'metric',label:'Metrics',count:55,color:C.metric,r:20},
-  {id:'kb',label:'KB Items',count:54,color:C.kb,r:20},
+  {id:'kb',label:'KB Items',count:64,color:C.kb,r:22},
   {id:'style',label:'Styles',count:48,color:C.style,r:18},
   {id:'tool',label:'Tools',count:42,color:C.tool,r:18},
   {id:'prompt',label:'Prompts',count:31,color:C.prompt,r:16},
@@ -286,63 +363,131 @@ const nodes=[
   {id:'agent',label:'Agents',count:6,color:C.agent,r:8},
   {id:'lint_ruleset',label:'Lint Rulesets',count:3,color:C.lint_ruleset,r:7}
 ];
-
 const edgeData=[
   {s:'content_type',t:'recipe',v:113},{s:'content_type',t:'tool',v:113},{s:'content_type',t:'prompt',v:113},
   {s:'content_type',t:'rubric',v:113},{s:'content_type',t:'metric',v:113},{s:'content_type',t:'style',v:113},
   {s:'content_type',t:'channel',v:113},{s:'recipe',t:'schema',v:118},{s:'recipe',t:'style',v:118},
   {s:'recipe',t:'channel',v:118},{s:'skill',t:'tool',v:82},{s:'skill',t:'kb',v:68},
   {s:'metric',t:'rubric',v:76},{s:'kb',t:'content_type',v:46},{s:'kb',t:'channel',v:46},
-  {s:'kb',t:'style',v:46},{s:'playbook',t:'bundle',v:30},{s:'playbook',t:'prompt',v:11}
+  {s:'kb',t:'style',v:46},{s:'playbook',t:'bundle',v:30},{s:'playbook',t:'prompt',v:11},
+  {s:'agent',t:'bundle',v:8},{s:'skill',t:'skill',v:96}
 ];
-
 const edgeLinks=edgeData.map(e=>({source:e.s,target:e.t,value:e.v}));
-
 edgeData.forEach((e,i)=>{
   const g=defs.append('linearGradient').attr('id','lg'+i).attr('gradientUnits','userSpaceOnUse');
-  const sc=nodes.find(n=>n.id===e.s).color;
-  const tc=nodes.find(n=>n.id===e.t).color;
-  g.append('stop').attr('offset','0%').attr('stop-color',sc).attr('stop-opacity',0.6);
-  g.append('stop').attr('offset','100%').attr('stop-color',tc).attr('stop-opacity',0.6);
+  g.append('stop').attr('offset','0%').attr('stop-color',nodes.find(n=>n.id===e.s).color).attr('stop-opacity',0.6);
+  g.append('stop').attr('offset','100%').attr('stop-color',nodes.find(n=>n.id===e.t).color).attr('stop-opacity',0.6);
 });
-
 const sim=d3.forceSimulation(nodes)
   .force('link',d3.forceLink(edgeLinks).id(d=>d.id).distance(120).strength(0.3))
   .force('charge',d3.forceManyBody().strength(-400))
   .force('center',d3.forceCenter(width/2,height/2))
   .force('collision',d3.forceCollide().radius(d=>d.r+15));
-
 const link=svg.append('g').selectAll('line').data(edgeLinks).join('line')
-  .attr('stroke',(d,i)=>'url(#lg'+i+')')
-  .attr('stroke-width',d=>Math.max(1,d.value/30))
-  .attr('stroke-opacity',0.5);
-
+  .attr('stroke',(d,i)=>'url(#lg'+i+')').attr('stroke-width',d=>Math.max(1,d.value/30)).attr('stroke-opacity',0.5);
 const node=svg.append('g').selectAll('g').data(nodes).join('g')
   .call(d3.drag().on('start',(e,d)=>{if(!e.active)sim.alphaTarget(.3).restart();d.fx=d.x;d.fy=d.y})
-  .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y})
-  .on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null}));
-
+  .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y}).on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null}));
 node.append('circle').attr('r',d=>d.r).attr('fill',d=>d.color).attr('fill-opacity',0.8)
-  .attr('stroke',d=>d.color).attr('stroke-width',2).attr('stroke-opacity',0.3)
-  .style('cursor','grab')
+  .attr('stroke',d=>d.color).attr('stroke-width',2).attr('stroke-opacity',0.3).style('cursor','grab')
   .on('mouseover',function(e,d){d3.select(this).transition().duration(200).attr('r',d.r+5).attr('fill-opacity',1).attr('stroke-opacity',0.6)})
   .on('mouseout',function(e,d){d3.select(this).transition().duration(200).attr('r',d.r).attr('fill-opacity',0.8).attr('stroke-opacity',0.3)});
-
 node.append('text').attr('class','node-label').attr('dy',d=>d.r+14).text(d=>d.label);
 node.append('text').attr('class','node-label').attr('dy',d=>d.r+25).attr('fill','#64748b').attr('font-size','9px').text(d=>d.count);
-
 sim.on('tick',()=>{
   link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
-  edgeData.forEach((e,i)=>{
-    const g=defs.select('#lg'+i);
-    const sl=edgeLinks[i];
-    g.attr('x1',sl.source.x).attr('y1',sl.source.y).attr('x2',sl.target.x).attr('y2',sl.target.y);
-  });
+  edgeData.forEach((e,i)=>{const g=defs.select('#lg'+i);const sl=edgeLinks[i];g.attr('x1',sl.source.x).attr('y1',sl.source.y).attr('x2',sl.target.x).attr('y2',sl.target.y)});
   node.attr('transform',d=>`translate(${d.x},${d.y})`);
 });
 })();
 
-// ─── DOMAIN CHART (Polar Area) ───
+// ─── 16 ATOMIC UNITS (with real data) ───
+const units=[
+  {n:'Skills',c:160,color:C.skill,icon:'⚡',desc:'Procedural knowledge for agents. Portable instruction sets with SKILL.md entrypoints. Categories: engineering, database, marketing. All single_shot execution mode, 300s timeout, 2 retries.',items:'<strong>Examples:</strong> Supabase Postgres Best Practices, Next.js Best Practices, Research Trends, Find Skills, Systematic Debugging, Craft Multimedia Study Guide'},
+  {n:'Recipes',c:118,color:C.recipe,icon:'🧪',desc:'Bind schema + style + channel + constraints into ready-to-run presets. Every recipe requires exactly one schema, one style, and one channel. 118 recipes cover all content production patterns.',items:'<strong>Links:</strong> Each recipe has 3 requires links (schema, style, channel) + related content_type'},
+  {n:'Content Types',c:113,color:C.content_type,icon:'📄',desc:'Publishing contracts across 11 families. Each type wires to tools, prompts, rubrics, metrics, styles, and channels. 630 modality assignments, 472 ops (research/draft/evaluate/publish).',items:'<strong>Families:</strong> qbank:22, social:20, message:14, visual:13, article:13, web:11, study_guide:7, report:4, audio:3, presentation:3, interactive:3'},
+  {n:'KB Items',c:64,color:C.kb,icon:'📚',desc:'Long-form reference context. 192 variants across 3 depth tiers: snippet (avg 550 chars, 144 tokens), distilled (1,501 chars, 379 tokens), full (2,538 chars, 666 tokens). Every KB item has all 3.',items:'<strong>Examples:</strong> Tools Guide Overview (60 links), Content Performance Playbook (28 links)'},
+  {n:'Metrics',c:55,color:C.metric,icon:'📊',desc:'What gets measured — views, conversions, retention, completion rates. Each metric recommends rubrics for scoring. 76 metric→rubric recommendations.',items:'<strong>Top:</strong> Completion Rate (26 links), tied to dashboards and A/B test outcomes'},
+  {n:'Styles',c:48,color:C.style,icon:'🎨',desc:'Formatting overlays — tone, voice, structure constraints. From Clinical Teaching to Viral Social to Leadership Briefing. Applied via recipes without changing schema shape.',items:'<strong>48 styles:</strong> Assessment, Bestseller Pop Nonfiction, Campaign, Cheat Sheet, Clinical Teaching, Deep Dive, Explainer, Infographic, Listicle, Mnemonic, Procedural, Professional Thought Leadership, Viral Social, Workshop...'},
+  {n:'Tools',c:42,color:C.tool,icon:'🔧',desc:'Executable capabilities. 5 types: HTTP (29), MCP (2), internal (5), SQL (1), bash (1). Providers include Tavily, Firecrawl, Fal, Kling, v0, Replicate, Novu, Cohere, Voyage, Relevance, E2B, CodeSandbox, Vercel, GitHub.',items:'<strong>By risk:</strong> Level 1 (safe): Tavily, Novu Health. Level 2 (moderate): most tools. Level 3 (elevated): E2B Sandbox, GitHub Pages, Vercel Deploy, Novu Remediate'},
+  {n:'Prompts',c:31,color:C.prompt,icon:'💬',desc:'Structured instruction contracts. 2 system prompts + 29 task prompts. Each has variables_json for parameterization. Content types wire to prompts via uses_prompt links (113 connections).',items:'<strong>System:</strong> Blog Post System, Playbook Step Executor. <strong>Task:</strong> Qbank Format, Article Structure, Social Hook, Visual Brief, Diagram Brief, Carousel, Citations, CTA, Flashcard Set, Rubric Judge...'},
+  {n:'Channels',c:27,color:C.channel,icon:'📡',desc:'Delivery surface constraints. Web leads with 165 links. Instagram, Email, LinkedIn, App, Slides, Slack, Pinterest, Facebook, YouTube, X, Podcast, Push, SMS, WhatsApp and more.',items:'<strong>Web:</strong> 137 tag uses (dominant). <strong>Social:</strong> Instagram, LinkedIn, Facebook, X, Pinterest. <strong>Direct:</strong> Email, SMS, WhatsApp, Push, Slack'},
+  {n:'Rubrics',c:25,color:C.rubric,icon:'✅',desc:'Evaluation criteria with weighted scoring. Content Quality and Engagement V1 are the hub rubrics. Domain-specific rubrics for QBank, Articles, Audio, Video, Carousel, Presentations.',items:'<strong>25 rubrics:</strong> Accuracy, Analysis, Article Quality, Assessment, Audio Quality, Carousel Quality, Clarity, Content Quality, Conversion, Engagement, Evidence, Pedagogy, Procedural Clarity, QBank Quality, Skill Quality, Tool Reliability, UI Quality...'},
+  {n:'Schemas',c:21,color:C.schema,icon:'🔷',desc:'Output shape contracts — JSON schemas that enforce structured output. The most fragile units: tests mandatory before promotion. Cover all content families.',items:'<strong>21 schemas:</strong> article_v2, qbank_item_v2, social_post_v1, social_carousel_v1, social_thread_v1, email_v1, message_sequence_v1, slide_deck_v1, study_guide_v1, practice_exam_v1, video_script_v1, audio_script_v1, web_page_v1, diagram_v1, flashcard_set_v1, interactive_module_v1, report_v1, visual_asset_v1, ui_screen_v1, onboarding_flow_v1, short_message_v1'},
+  {n:'Playbooks',c:13,color:C.playbook,icon:'📋',desc:'Ordered multi-step workflows. All use "guided" execution mode with typed steps: discover, execute, evaluate. Each step references specific skills, tools, prompts, agents, and rubrics.',items:'<strong>Production:</strong> Blog, Study Guide. <strong>Ops:</strong> Registry Health Scan, Validate Schemas, Run Golden Tests, Refresh Embeddings, Sync MCP Catalog, Test MCP Connections. <strong>Factory:</strong> Create Skill, Generate Template, Import Pack, Suggest Links'},
+  {n:'Bundles',c:11,color:C.bundle,icon:'📦',desc:'Curated collections. 5 context bundles (Audience Profile, Brand Voice, Campaign Research, Exam Appendices, Product Positioning) + 6 starter kits (Blog, QBank, Study Guide, Devtool, Golden Cohort, Launchpad Core).',items:'<strong>Golden Cohort</strong> (53 links) is the hub bundle — the canonical "best of" collection. <strong>Launchpad Core</strong> powers the CMS action palette.'},
+  {n:'Lint Rules',c:8,color:C.lint_rule,icon:'🔍',desc:'Machine-checkable validations. Each has a severity level and rule_json parameters. Power ambient quality gates in the CMS preview. Related to prompts (16 links) for guidance.',items:'<strong>Purpose:</strong> Readability checks, structure validation, brand compliance, pre-publish quality gates'},
+  {n:'Agents',c:6,color:C.agent,icon:'🤖',desc:'AI personas with defined voices, roles, and model defaults. Each has persona_name, persona_role, persona_voice, system_prompt, temperature, and boundaries_json.',items:'<strong>Rex</strong> (Builder), <strong>Ivy</strong> (Editor), <strong>Nova</strong> (Researcher), <strong>Quinn</strong> (Reviewer), <strong>Atlas</strong> (Strategist), <strong>Lucy</strong> (Lesson Planner)'},
+  {n:'Lint Rulesets',c:3,color:C.lint_ruleset,icon:'📏',desc:'Ordered collections of lint rules. Group rules by surface (blog, CMS, social) into a single "run lint" action. Sequence ordering via lint_ruleset_rules table.',items:'<strong>Purpose:</strong> Bundle lint rules into surface-specific validation suites'}
+];
+const ugEl=document.getElementById('unitsGrid');
+units.forEach(u=>{
+  const d=document.createElement('div');d.className='uc';
+  d.innerHTML=`<div class="uc-top"><div class="uc-icon" style="background:${u.color}22;color:${u.color}">${u.icon}</div><div class="uc-name">${u.n}</div><div class="uc-count">${u.c}</div></div><div class="uc-desc">${u.desc}</div><div class="uc-items">${u.items}</div>`;
+  ugEl.appendChild(d);
+});
+
+// ─── AGENTS ───
+const agents=[
+  {n:'Rex (Repo Explorer)',r:'builder',v:'Direct, factual, code-referenced.',c:'#38bdf8'},
+  {n:'Ivy (Diff-First Editor)',r:'editor',v:'Clear, respectful, explicit diffs, asks clarifying questions.',c:'#4ade80'},
+  {n:'Nova (Research Librarian)',r:'researcher',v:'Cautious, citation-forward, dates included.',c:'#c084fc'},
+  {n:'Quinn (Quality Reviewer)',r:'reviewer',v:'Critical-first, specific, test-minded.',c:'#f87171'},
+  {n:'Atlas (Orchestrator)',r:'strategist',v:'Operational, checklists, keeps systems clean.',c:'#fbbf24'},
+  {n:'Lucy (Lesson Planner)',r:'strategist',v:'Engaging, structured, crisp narrative arc.',c:'#f472b6'}
+];
+const agEl=document.getElementById('agentsGrid');
+agents.forEach(a=>{
+  const d=document.createElement('div');d.className='agent-card';
+  d.innerHTML=`<div class="agent-name" style="color:${a.c}">${a.n}</div><div class="agent-role">${a.r}</div><div class="agent-voice">"${a.v}"</div>`;
+  agEl.appendChild(d);
+});
+
+// ─── CONTENT TYPE FAMILIES ───
+const families=[{l:'QBank',v:22},{l:'Social',v:20},{l:'Message',v:14},{l:'Visual',v:13},{l:'Article',v:13},{l:'Web',v:11},{l:'Study Guide',v:7},{l:'Report',v:4},{l:'Audio',v:3},{l:'Presentation',v:3},{l:'Interactive',v:3}];
+new Chart(document.getElementById('familyChart'),{
+  type:'bar',
+  data:{labels:families.map(f=>f.l),datasets:[{data:families.map(f=>f.v),backgroundColor:['#fbbf24cc','#4ade80cc','#f472b6cc','#c084fccc','#38bdf8cc','#60a5facc','#2dd4bfcc','#fb923ccc','#e879f9cc','#a3e635cc','#67e8f9cc'],borderRadius:4}]},
+  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#64748b',font:{size:9}}},y:{grid:{display:false},ticks:{color:'#94a3b8',font:{size:9}}}},plugins:{legend:{display:false}}}
+});
+
+// ─── TOP APPS ───
+const apps=[{n:'FNP Mastery',t:1,s:22,a:'nurse practitioner'},{n:'My Mastery: NCLEX & Nursing',t:1,s:14,a:'nursing licensure'},{n:'My Dental Mastery',t:1,s:8,a:'dental licensure'},{n:'TEAS Mastery',t:1,s:8,a:'nursing entrance'},{n:'Everything Else',t:4,s:6,a:'long-tail'},{n:'Springer',t:4,s:6,a:'publisher partner'},{n:'ASVAB Practice For Dummies',t:3,s:5,a:'military recruits'},{n:'NCLEX PN Mastery',t:1,s:5,a:'nursing licensure'},{n:'PTCB Exam Mastery',t:2,s:4,a:'pharmacy tech'},{n:'Real Estate - Dearborn',t:3,s:4,a:'real estate'}];
+const appEl=document.getElementById('appsList');
+const tierColors={1:'#4ade80',2:'#38bdf8',3:'#fbbf24',4:'#f87171'};
+apps.forEach(a=>{
+  const d=document.createElement('div');d.className='app-row';
+  d.innerHTML=`<span class="app-tier" style="background:${tierColors[a.t]}22;color:${tierColors[a.t]}">T${a.t}</span><span style="font-size:11px;color:#e2e8f0;flex:1">${a.n}</span><span style="font-size:9px;color:#64748b">${a.a}</span><span style="font-size:11px;font-weight:800;color:#f4f4f5">${a.s}%</span>`;
+  appEl.appendChild(d);
+});
+appEl.innerHTML+=`<div style="font-size:9px;color:#3f3f46;margin-top:6px">+ 198 more apps across T2-T4 and untiered. T1 flagships = 57% revenue.</div>`;
+
+// ─── TOOLS LIST ───
+const toolsByType={
+  'HTTP (29)':[{n:'Tavily Search',p:'tavily',r:1},{n:'Firecrawl Scrape/Crawl',p:'firecrawl',r:2},{n:'Fal Image Gen/Edit',p:'fal',r:2},{n:'Kling Video Animate',p:'kling',r:2},{n:'v0 Generate/Scaffold',p:'v0',r:2},{n:'Replicate Image Edit',p:'replicate',r:2},{n:'Diagram Flowchart/Mermaid',p:'diagram',r:2},{n:'Audio Generate/Transcribe',p:'audio',r:2},{n:'E2B Code Sandbox',p:'e2b',r:3},{n:'Vercel Deploy',p:'vercel',r:3},{n:'GitHub Pages',p:'github',r:3},{n:'CodeSandbox Create/Update',p:'codesandbox',r:2},{n:'Cohere/Voyage Rerank',p:'cohere/voyage',r:2},{n:'Relevance AI (4 tools)',p:'relevance',r:2},{n:'Novu Trigger',p:'novu',r:2},{n:'Publish Web/Email/Social',p:'publish',r:2},{n:'Metabase Export',p:'metabase',r:2},{n:'A/B Test Create/Analyze',p:'ab_test',r:2},{n:'Calendar Schedule',p:'calendar',r:2},{n:'Metrics Fetch',p:'metrics',r:2}],
+  'MCP (2)':[{n:'Browser Snapshot',p:'browser',r:2},{n:'Repo Write',p:'repo',r:2}],
+  'Internal (5)':[{n:'Novu Workflows Sync',p:'novu',r:2},{n:'Novu Shadow Subscriber',p:'novu',r:2},{n:'Novu Ops Snapshot',p:'novu',r:2},{n:'Novu Ops Remediate',p:'novu',r:3},{n:'Novu Health',p:'novu',r:1}],
+  'SQL (1)':[{n:'DB Query',p:'db',r:2}],
+  'Bash (1)':[{n:'Bash Run',p:'bash',r:2}]
+};
+const tlEl=document.getElementById('toolsList');
+Object.entries(toolsByType).forEach(([type,tools])=>{
+  tlEl.innerHTML+=`<div style="font-size:10px;font-weight:700;color:var(--fg-muted);margin:8px 0 4px;${type.startsWith('HTTP')?'margin-top:0':''}">${type}</div>`;
+  tools.forEach(t=>{
+    const rc={1:'#4ade80',2:'#fbbf24',3:'#f87171'}[t.r];
+    tlEl.innerHTML+=`<div style="display:flex;align-items:center;gap:6px;padding:2px 0;font-size:9px"><span style="width:4px;height:4px;border-radius:50%;background:${rc};flex-shrink:0"></span><span style="color:#e2e8f0">${t.n}</span><span style="color:#3f3f46;margin-left:auto">${t.p}</span></div>`;
+  });
+});
+
+// ─── SCHEMAS ───
+const schemas=['article_v2','qbank_item_v2','social_post_v1','social_carousel_v1','social_thread_v1','email_v1','message_sequence_v1','slide_deck_v1','study_guide_v1','practice_exam_v1','video_script_v1','audio_script_v1','web_page_v1','diagram_v1','flashcard_set_v1','interactive_module_v1','report_v1','visual_asset_v1','ui_screen_v1','onboarding_flow_v1','short_message_v1'];
+const scEl=document.getElementById('schemasList');
+const schemaFamilies={article:['article_v2'],qbank:['qbank_item_v2','practice_exam_v1','flashcard_set_v1'],social:['social_post_v1','social_carousel_v1','social_thread_v1'],message:['email_v1','message_sequence_v1','short_message_v1','onboarding_flow_v1'],media:['video_script_v1','audio_script_v1','visual_asset_v1','diagram_v1'],web:['web_page_v1','slide_deck_v1','ui_screen_v1'],education:['study_guide_v1','interactive_module_v1'],report:['report_v1']};
+Object.entries(schemaFamilies).forEach(([fam,list])=>{
+  scEl.innerHTML+=`<div style="font-size:10px;font-weight:700;color:var(--fg-muted);margin:8px 0 3px;text-transform:capitalize">${fam}</div><div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px">${list.map(s=>`<span class="badge" style="background:${C.schema}22;color:${C.schema}">${s}</span>`).join('')}</div>`;
+});
+
+// ─── DOMAIN CHART ───
 const domains=[{l:'engineering',v:49},{l:'writing',v:38},{l:'education',v:30},{l:'mcp',v:27},{l:'data',v:26},{l:'ai-sdk',v:20},{l:'marketing',v:18},{l:'design',v:5},{l:'cms',v:4},{l:'product',v:4},{l:'database',v:3},{l:'nursing',v:2},{l:'dental',v:2}];
 new Chart(document.getElementById('domainChart'),{
   type:'polarArea',
@@ -350,20 +495,19 @@ new Chart(document.getElementById('domainChart'),{
   options:{responsive:true,maintainAspectRatio:false,scales:{r:{grid:{color:'rgba(255,255,255,.05)'},ticks:{display:false}}},plugins:{legend:{display:false}}}
 });
 
-// ─── TOP LINKED ENTITIES ───
-const topLinked=[{n:'Web',t:'channel',v:165},{n:'Find Skills',t:'skill',v:74},{n:'Bash Run',t:'tool',v:64},{n:'Tools Guide Overview',t:'kb',v:59},{n:'Golden Cohort',t:'bundle',v:53},{n:'Engagement V1',t:'rubric',v:51},{n:'Systematic Debugging',t:'skill',v:49},{n:'Assessment',t:'style',v:46},{n:'Content Quality',t:'rubric',v:39},{n:'Article Standard',t:'content_type',v:38}];
-const tlEl=document.getElementById('topLinked');
+// ─── TOP LINKED ───
+const topLinked=[{n:'Web',t:'channel',v:165},{n:'Find Skills',t:'skill',v:74},{n:'Bash Run',t:'tool',v:65},{n:'Tools Guide Overview',t:'kb',v:60},{n:'Golden Cohort',t:'bundle',v:53},{n:'Systematic Debugging',t:'skill',v:51},{n:'Engagement V1',t:'rubric',v:51},{n:'Assessment',t:'style',v:46},{n:'Content Quality',t:'rubric',v:39},{n:'Article Standard',t:'content_type',v:38},{n:'Qbank Mcq Single',t:'content_type',v:36},{n:'Tavily Search',t:'tool',v:30}];
+const topEl=document.getElementById('topLinked');
 topLinked.forEach((e,i)=>{
-  const d=document.createElement('div');
-  d.style.cssText='display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.03)';
-  d.innerHTML=`<span style="font-size:11px;color:#64748b;width:16px">${i+1}</span><span style="width:6px;height:6px;border-radius:50%;background:${C[e.t]};flex-shrink:0"></span><span style="font-size:11px;color:#e2e8f0;flex:1">${e.n}</span><span style="font-size:10px;color:#64748b">${e.t}</span><span style="font-size:11px;font-weight:700;color:#f4f4f5">${e.v}</span>`;
-  tlEl.appendChild(d);
+  const d=document.createElement('div');d.style.cssText='display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.02)';
+  d.innerHTML=`<span style="font-size:9px;color:#3f3f46;width:14px">${i+1}</span><span style="width:5px;height:5px;border-radius:50%;background:${C[e.t]};flex-shrink:0"></span><span style="font-size:10px;color:#e2e8f0;flex:1">${e.n}</span><span style="font-size:8px;color:#3f3f46">${e.t}</span><span style="font-size:10px;font-weight:700;color:#f4f4f5">${e.v}</span>`;
+  topEl.appendChild(d);
 });
 
-// ─── TAG GRID ───
-const tags=[{n:'scope',v:733},{n:'status',v:732},{n:'modality',v:473},{n:'format',v:426},{n:'channel',v:248},{n:'source',v:232},{n:'domain',v:227},{n:'action',v:175},{n:'family',v:115},{n:'stage',v:103},{n:'surface',v:78},{n:'partner',v:65},{n:'tool_type',v:52},{n:'provider',v:46},{n:'dept',v:16},{n:'persona_role',v:6}];
+// ─── TAG GRID (all 31 namespaces) ───
+const tags=[{n:'channel',v:248,d:'web:137, instagram:11, email:11'},{n:'action',v:192,d:'write:51, execute:43, build:35'},{n:'scope',v:733},{n:'status',v:732},{n:'modality',v:473},{n:'format',v:426},{n:'source',v:232},{n:'domain',v:227},{n:'family',v:115},{n:'stage',v:103},{n:'surface',v:78},{n:'partner',v:65},{n:'tool_type',v:52},{n:'provider',v:46},{n:'dept',v:16},{n:'persona_role',v:6},{n:'bundle_type',v:5},{n:'audience',v:2},{n:'app',v:0},{n:'brand',v:0},{n:'exam',v:0},{n:'initiative',v:0},{n:'persona',v:0},{n:'platform',v:0},{n:'priority',v:0},{n:'product',v:0},{n:'risk',v:0},{n:'segment',v:0},{n:'system',v:0},{n:'tier',v:0},{n:'topic',v:0}];
 const tgEl=document.getElementById('tagGrid');
-tags.forEach(t=>{const op=Math.max(.08,t.v/733*.7);const d=document.createElement('div');d.className='tc';d.style.background=`rgba(139,92,246,${op})`;d.innerHTML=`<div class="tn">${t.n}</div><div class="tv">${t.v}</div>`;tgEl.appendChild(d)});
+tags.slice(0,16).forEach(t=>{const op=Math.max(.08,t.v/733*.7);const d=document.createElement('div');d.className='tc';d.style.background=`rgba(139,92,246,${op})`;d.innerHTML=`<div class="tn">${t.n}</div><div class="tv">${t.v}</div>`;tgEl.appendChild(d)});
 
 // ─── DONUT ───
 new Chart(document.getElementById('donut'),{type:'doughnut',data:{labels:['With Artifacts','Without'],datasets:[{data:[850,770],backgroundColor:['#2dd4bf','#27272a'],borderWidth:0}]},options:{cutout:'72%',plugins:{legend:{display:false},tooltip:{enabled:false}},responsive:true,maintainAspectRatio:true}});
@@ -371,58 +515,37 @@ const artifacts=[{n:'Skills',v:271,c:C.skill},{n:'Recipes',v:118,c:C.recipe},{n:
 const alEl=document.getElementById('artList');
 artifacts.forEach(a=>alEl.innerHTML+=`<div class="ai"><div class="ad" style="background:${a.c}"></div><span style="color:#94a3b8">${a.n}</span><span style="color:#f4f4f5;font-weight:600;margin-left:auto">${a.v}</span></div>`);
 
-// ─── AVG TAGS CHART ───
+// ─── KB QUALITY ───
+new Chart(document.getElementById('kbChart'),{
+  type:'bar',
+  data:{labels:['Snippet (64)','Distilled (64)','Full (64)'],datasets:[{label:'Avg Chars',data:[550,1501,2538],backgroundColor:['#f87171aa','#fbbf24aa','#4ade80aa'],borderRadius:4},{label:'Avg Tokens',data:[144,379,666],backgroundColor:['#f8717144','#fbbf2444','#4ade8044'],borderRadius:4}]},
+  options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#94a3b8',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#64748b',font:{size:9}}}},plugins:{legend:{labels:{color:'#94a3b8',font:{size:9}}}}}
+});
+
+// ─── AVG TAGS ───
 const avgTags=[{t:'tool',v:8.8},{t:'agent',v:8.3},{t:'prompt',v:7.1},{t:'kb',v:7.1},{t:'schema',v:6.8},{t:'skill',v:6.1},{t:'content_type',v:5.6},{t:'recipe',v:4.6},{t:'style',v:4.5},{t:'metric',v:4.1},{t:'channel',v:3.8},{t:'playbook',v:3.3},{t:'rubric',v:3},{t:'lint_rule',v:3},{t:'bundle',v:2.9}];
 new Chart(document.getElementById('tagsChart'),{
   type:'bar',
-  data:{labels:avgTags.map(d=>d.t),datasets:[{data:avgTags.map(d=>d.v),backgroundColor:avgTags.map(d=>(C[d.t]||'#666')+'cc'),borderRadius:4}]},
-  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#64748b',font:{size:9}}},y:{grid:{display:false},ticks:{color:'#94a3b8',font:{size:9}}}},plugins:{legend:{display:false}}}
+  data:{labels:avgTags.map(d=>d.t),datasets:[{data:avgTags.map(d=>d.v),backgroundColor:avgTags.map(d=>(C[d.t]||'#666')+'cc'),borderRadius:3}]},
+  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#64748b',font:{size:8}}},y:{grid:{display:false},ticks:{color:'#94a3b8',font:{size:8}}}},plugins:{legend:{display:false}}}
 });
 
-// ─── KB QUALITY CHART ───
-new Chart(document.getElementById('kbChart'),{
-  type:'bar',
-  data:{labels:['Snippet','Distilled','Full'],datasets:[{label:'Avg Length',data:[486,1325,2376],backgroundColor:['#f87171aa','#fbbf24aa','#4ade80aa'],borderRadius:4},{label:'Max Length',data:[3017,2026,4381],backgroundColor:['#f8717144','#fbbf2444','#4ade8044'],borderRadius:4}]},
-  options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#94a3b8'}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#64748b',font:{size:9}}}},plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}}}
-});
-
-// ─── 16 ATOMIC UNITS REFERENCE ───
-const units=[
-  {n:'Skills',c:160,color:C.skill,icon:'⚡',desc:'Procedural knowledge for agents. Portable, activation-friendly instruction sets with SKILL.md entrypoints. Define how to do things — research, draft, evaluate, debug.',tags:['procedural','agent-ready','SKILL.md','unit.json']},
-  {n:'Recipes',c:118,color:C.recipe,icon:'🧪',desc:'Presets that bind schema + style + constraints. Ready-to-run configuration packages for consistent output. Not new schemas — packaging of existing ones.',tags:['preset','schema+style','RECIPE.json','constraints']},
-  {n:'Content Types',c:113,color:C.content_type,icon:'📄',desc:'Editor presets and publishing contracts. Define "what kind of asset is this?" — articles, qbank items, slide decks. Wire default recipe/style/channel expectations.',tags:['publishing','modalities','ops pipeline','CMS editor']},
-  {n:'Metrics',c:55,color:C.metric,icon:'📊',desc:'What gets measured. Define units, aggregation methods, and interpretation. Track content performance, A/B test outcomes, retention signals.',tags:['measurement','aggregation','dashboards','experiments']},
-  {n:'KB Items',c:54,color:C.kb,icon:'📚',desc:'Long-form reference context with no length limit. Domain expertise, best practices, and citeable reference packets. Three variants: snippet, distilled, full.',tags:['reference','context','KB.md','3 variants']},
-  {n:'Styles',c:48,color:C.style,icon:'🎨',desc:'Formatting overlays — tone, voice, and structure constraints that don\'t change schema shape. Give agents a stable "house style" to apply consistently.',tags:['tone/voice','overlays','constraints','non-schema']},
-  {n:'Tools',c:42,color:C.tool,icon:'🔧',desc:'Executable capabilities with explicit I/O contracts. External APIs, internal services, deterministic actions. Types: MCP, HTTP, internal, SDK, CLI.',tags:['executable','I/O contract','mcp/http/cli','auditable']},
-  {n:'Prompts',c:31,color:C.prompt,icon:'💬',desc:'Structured instruction contracts — system, task, format, policy, rubric prompts. Not one-liners. Must include objective, inputs, instructions, output format, guardrails.',tags:['instructions','reusable','structured','versioned']},
-  {n:'Channels',c:27,color:C.channel,icon:'📡',desc:'Delivery surface constraints. Platform-specific limits like max chars, carousel support, alt text requirements. Enforce output standards per surface.',tags:['delivery','platform limits','surface rules','output']},
-  {n:'Rubrics',c:25,color:C.rubric,icon:'✅',desc:'Evaluation criteria with scores, weights, and pass/fail thresholds. Evidence-first, composable. Power A/B tests, pairwise judging, and quality scoring.',tags:['evaluation','scoring','criteria','thresholds']},
-  {n:'Schemas',c:21,color:C.schema,icon:'🔷',desc:'Output shape contracts — the most fragile units requiring strongest testing. Enforce structured outputs, validate content type payloads. Tests mandatory.',tags:['JSON shape','validation','tests required','fragile']},
-  {n:'Playbooks',c:13,color:C.playbook,icon:'📋',desc:'Ordered multi-step patterns. Define recommended sequences of skills/tools. Three modes: strict (required order), guided (suggested), adaptive (weighted hints).',tags:['multi-step','sequenced','3 modes','workflow']},
-  {n:'Bundles',c:11,color:C.bundle,icon:'📦',desc:'Curated collections of units without imposed order. Starter kits, context bundles, grouped skills/KB/tools for discovery. Membership via entity_links.',tags:['collection','unordered','starter kits','grouping']},
-  {n:'Lint Rules',c:8,color:C.lint_rule,icon:'🔍',desc:'Machine-checkable validations for readability, structure, brand compliance. Power "readiness strips" and ambient validation in preview/render surfaces.',tags:['validation','automated','quality gates','severity']},
-  {n:'Agents',c:6,color:C.agent,icon:'🤖',desc:'Personas + preferences, not capabilities. Reusable voice/role profiles with model defaults, temperature settings, and proclivities (prefer/avoid patterns).',tags:['persona','voice/role','proclivities','defaults']},
-  {n:'Lint Rulesets',c:3,color:C.lint_ruleset,icon:'📏',desc:'Ordered collections of lint rules grouped for a surface. Define "run lint" actions for blog publishing, CMS content, etc. Membership via lint_ruleset_rules.',tags:['rule groups','ordered','surface-scoped','sequence']}
-];
-const ugEl=document.getElementById('unitsGrid');
-units.forEach(u=>{
-  const d=document.createElement('div');d.className='unit-card';
-  d.innerHTML=`<div class="uc-top"><div class="uc-icon" style="background:${u.color}22;color:${u.color}">${u.icon}</div><div class="uc-name">${u.n}</div><div class="uc-count">${u.c}</div></div><div class="uc-desc">${u.desc}</div><div class="uc-meta">${u.tags.map(t=>`<span class="uc-tag">${t}</span>`).join('')}</div>`;
-  ugEl.appendChild(d);
-});
+// ─── SYSTEM STATS ───
+const sysStats=[{l:'Runs',v:75},{l:'Run Steps',v:79},{l:'Evaluations',v:40},{l:'Templates',v:10},{l:'Automations',v:13},{l:'Campaigns',v:4}];
+const ssEl=document.getElementById('sysStats');
+sysStats.forEach(s=>{ssEl.innerHTML+=`<div style="text-align:center"><div style="font-size:20px;font-weight:900;color:#f4f4f5">${s.v}</div><div style="font-size:8px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-top:2px">${s.l}</div></div>`});
 
 // ─── ARCHITECTURE ───
 document.getElementById('arch').innerHTML=`
 <div class="arch">
   <div class="arch-r">
     <div class="arch-l"><h3 style="border-bottom:2px solid ${C.content_type};color:${C.content_type}">Content Pipeline</h3><div class="pills"><span class="pill" style="background:${C.content_type}">Content Types · 113</span><span class="pill" style="background:${C.recipe}">Recipes · 118</span><span class="pill" style="background:${C.schema}">Schemas · 21</span><span class="pill" style="background:${C.style}">Styles · 48</span><span class="pill" style="background:${C.channel}">Channels · 27</span></div></div>
-    <div class="arch-l"><h3 style="border-bottom:2px solid ${C.skill};color:${C.skill}">Support Layer</h3><div class="pills"><span class="pill" style="background:${C.skill}">Skills · 160</span><span class="pill" style="background:${C.kb}">KB Items · 54</span><span class="pill" style="background:${C.tool}">Tools · 42</span><span class="pill" style="background:${C.prompt}">Prompts · 31</span></div></div>
+    <div class="arch-l"><h3 style="border-bottom:2px solid ${C.skill};color:${C.skill}">Capability Layer</h3><div class="pills"><span class="pill" style="background:${C.skill}">Skills · 160</span><span class="pill" style="background:${C.kb}">KB Items · 64</span><span class="pill" style="background:${C.tool}">Tools · 42</span><span class="pill" style="background:${C.prompt}">Prompts · 31</span><span class="pill" style="background:${C.agent}">Agents · 6</span></div></div>
   </div>
-  <div class="arch-mid">▼ entity_links (2,425) · entity_tags · entity_revisions · entity_embeddings ▼</div>
+  <div class="arch-mid">▼ entity_links (2,425) · entity_tags (4,500+) · entity_revisions (1,620) · kb_variants (192) ▼</div>
   <div class="arch-r">
-    <div class="arch-l"><h3 style="border-bottom:2px solid ${C.metric};color:${C.metric}">Evaluation Layer</h3><div class="pills"><span class="pill" style="background:${C.metric}">Metrics · 55</span><span class="pill" style="background:${C.rubric}">Rubrics · 25</span><span class="pill" style="background:${C.lint_rule}">Lint Rules · 8</span></div></div>
-    <div class="arch-l"><h3 style="border-bottom:2px solid ${C.playbook};color:${C.playbook}">Execution Layer</h3><div class="pills"><span class="pill" style="background:${C.playbook}">Playbooks · 13</span><span class="pill" style="background:${C.bundle}">Bundles · 11</span><span class="pill" style="background:${C.agent}">Agents · 6</span></div></div>
+    <div class="arch-l"><h3 style="border-bottom:2px solid ${C.metric};color:${C.metric}">Evaluation Layer</h3><div class="pills"><span class="pill" style="background:${C.metric}">Metrics · 55</span><span class="pill" style="background:${C.rubric}">Rubrics · 25</span><span class="pill" style="background:${C.lint_rule}">Lint Rules · 8</span><span class="pill" style="background:${C.lint_ruleset}">Lint Rulesets · 3</span></div></div>
+    <div class="arch-l"><h3 style="border-bottom:2px solid ${C.playbook};color:${C.playbook}">Execution Layer</h3><div class="pills"><span class="pill" style="background:${C.playbook}">Playbooks · 13</span><span class="pill" style="background:${C.bundle}">Bundles · 11</span></div><div style="font-size:8px;color:#64748b;margin-top:6px">75 runs · 79 steps · 40 evals · 10 templates · 13 automations · 4 campaigns</div></div>
   </div>
 </div>`;
 </script>
