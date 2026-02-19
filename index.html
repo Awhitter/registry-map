@@ -1,419 +1,699 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Catalyst AI Registry — Mission Control</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Inter',system-ui,sans-serif; background:#09090b; color:#e4e4e7; min-height:100vh; }
-  
-  /* Header */
-  .header { padding:32px 32px 24px; background:linear-gradient(180deg,#18181b 0%,#09090b 100%); border-bottom:1px solid #27272a; }
-  .header-top { display:flex; align-items:center; gap:16px; margin-bottom:24px; }
-  .logo { width:44px; height:44px; background:linear-gradient(135deg,#38bdf8,#818cf8); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; }
-  .header h1 { font-size:26px; font-weight:800; background:linear-gradient(135deg,#f4f4f5,#71717a); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-  .header .sub { font-size:13px; color:#71717a; margin-top:2px; }
-  
-  /* Stats Grid */
-  .stats { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; }
-  @media(max-width:900px) { .stats { grid-template-columns:repeat(3,1fr); } }
-  @media(max-width:500px) { .stats { grid-template-columns:repeat(2,1fr); } }
-  .stat-card { background:#18181b; border:1px solid #27272a; border-radius:10px; padding:16px; transition:border-color .2s; }
-  .stat-card:hover { border-color:#3f3f46; }
-  .stat-card .val { font-size:28px; font-weight:800; color:#f4f4f5; }
-  .stat-card .lbl { font-size:11px; color:#71717a; text-transform:uppercase; letter-spacing:.5px; margin-top:2px; }
-  .stat-accent { color:#38bdf8; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catalyst AI Registry Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@2.3.0/dist/chartjs-chart-treemap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-bg: #0D0F18;
+            --color-bg-secondary: #131523;
+            --color-glass: rgba(26, 29, 45, 0.5);
+            --color-border: rgba(126, 136, 197, 0.2);
+            --color-border-glow: rgba(126, 136, 197, 0.3);
+            --color-text-primary: #E0E4FA;
+            --color-text-secondary: #8E98C5;
+            --color-text-header: #FFFFFF;
+            --color-accent-primary: #00F5D4;
+            --color-accent-secondary: #8A42D8;
+            --color-accent-tertiary: #F82282;
+            --font-family: 'Inter', sans-serif;
+        }
 
-  /* Main Grid */
-  .main { padding:24px 32px; display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-  @media(max-width:900px) { .main { grid-template-columns:1fr; } }
-  .card { background:#18181b; border:1px solid #27272a; border-radius:12px; overflow:hidden; }
-  .card-head { padding:16px 20px 12px; display:flex; align-items:center; gap:8px; border-bottom:1px solid #27272a; }
-  .card-head h2 { font-size:14px; font-weight:600; color:#a1a1aa; }
-  .card-head .dot { width:8px; height:8px; border-radius:50%; }
-  .card-body { padding:20px; }
-  .full { grid-column:1/-1; }
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-  /* Entity Bars */
-  .ebar { display:flex; align-items:center; margin-bottom:6px; }
-  .ebar-name { width:100px; font-size:12px; color:#a1a1aa; text-align:right; padding-right:12px; flex-shrink:0; }
-  .ebar-track { flex:1; height:26px; background:#27272a; border-radius:6px; overflow:hidden; position:relative; }
-  .ebar-fill { height:100%; border-radius:6px; display:flex; align-items:center; padding-left:10px; font-size:11px; font-weight:700; color:#fff; transition:width 1s cubic-bezier(.4,0,.2,1); }
-  .ebar-track:hover .ebar-fill { filter:brightness(1.15); }
+        html {
+            scroll-behavior: smooth;
+        }
 
-  /* Connection Flow */
-  .flow-svg { width:100%; height:auto; }
-  .flow-svg text { font-family:'Inter',sans-serif; }
+        body {
+            font-family: var(--font-family);
+            background-color: var(--color-bg);
+            color: var(--color-text-primary);
+            background-image: 
+                radial-gradient(circle at 1px 1px, rgba(142, 152, 197, 0.1) 1px, transparent 0);
+            background-size: 32px 32px;
+            overflow-x: hidden;
+            animation: fadeIn 1s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-  /* Tag Heatmap */
-  .tag-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
-  @media(max-width:600px) { .tag-grid { grid-template-columns:repeat(2,1fr); } }
-  .tag-cell { padding:10px 8px; border-radius:8px; text-align:center; transition:transform .15s; cursor:default; }
-  .tag-cell:hover { transform:scale(1.05); }
-  .tag-cell .tn { font-size:12px; font-weight:600; color:#e4e4e7; }
-  .tag-cell .tv { font-size:11px; color:#a1a1aa; margin-top:2px; }
+        .dashboard-container {
+            display: grid;
+            gap: 24px;
+            padding: 24px;
+            max-width: 1800px;
+            margin: 0 auto;
+            grid-template-columns: repeat(12, 1fr);
+            grid-template-rows: auto;
+        }
 
-  /* Artifact Donut */
-  .artifact-row { display:flex; align-items:center; gap:24px; }
-  .donut-wrap { position:relative; width:140px; height:140px; flex-shrink:0; }
-  .donut-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-  .donut-center .pct { font-size:24px; font-weight:800; color:#f4f4f5; }
-  .donut-center .plbl { font-size:10px; color:#71717a; }
-  .art-list { display:grid; grid-template-columns:1fr 1fr; gap:4px 16px; font-size:12px; }
-  .art-list .ai { display:flex; align-items:center; gap:6px; }
-  .art-list .adot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+        .card {
+            background: var(--color-glass);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 24px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px 0 rgba(0,0,0,0.1);
+        }
+        
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: var(--color-border-glow);
+            box-shadow: 0 0 20px rgba(138, 66, 216, 0.1), 0 0 40px rgba(0, 245, 212, 0.1);
+        }
 
-  /* App Treemap */
-  .tree-row { display:flex; gap:4px; height:200px; }
-  .tree-block { border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:filter .2s; cursor:default; }
-  .tree-block:hover { filter:brightness(1.15); }
-  .tree-block .tb-name { font-size:11px; font-weight:700; color:#fff; }
-  .tree-block .tb-val { font-size:10px; color:rgba(255,255,255,.7); }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
 
-  /* Architecture */
-  .arch-layers { display:flex; flex-direction:column; gap:12px; }
-  .arch-row { display:flex; gap:12px; }
-  @media(max-width:600px) { .arch-row { flex-direction:column; } }
-  .arch-layer { flex:1; background:#0f0f12; border:1px solid #27272a; border-radius:10px; padding:16px; }
-  .arch-layer h3 { font-size:13px; font-weight:700; margin-bottom:10px; padding-bottom:8px; }
-  .arch-pills { display:flex; flex-wrap:wrap; gap:6px; }
-  .arch-pill { font-size:11px; font-weight:600; padding:4px 10px; border-radius:20px; color:#09090b; }
-  .arch-arrow { text-align:center; color:#3f3f46; font-size:20px; padding:4px 0; }
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--color-text-header);
+        }
 
-  /* Link table */
-  .ltable { width:100%; border-collapse:collapse; font-size:12px; }
-  .ltable th { text-align:left; color:#71717a; font-size:10px; text-transform:uppercase; letter-spacing:.5px; padding:6px 8px; border-bottom:1px solid #27272a; }
-  .ltable td { padding:6px 8px; border-bottom:1px solid #1a1a1f; }
-  .ltable tr:hover { background:#1a1a1f; }
-  .lbadge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:600; }
-</style>
+        .card-subtitle {
+            font-size: 0.85rem;
+            color: var(--color-text-secondary);
+        }
+        
+        .header { grid-column: 1 / -1; }
+        .stat-card { grid-column: span 3; }
+        .connection-flow { grid-column: 1 / 9; grid-row: 2 / 4; }
+        .architectural-layers { grid-column: 9 / -1; grid-row: 2 / 4; }
+        .app-usage { grid-column: 1 / 7; }
+        .entity-types { grid-column: 7 / -1; }
+        .tag-coverage { grid-column: 1 / 8; }
+        .connection-types { grid-column: 8 / -1; }
+
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--color-border);
+            margin-bottom: -16px;
+        }
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--color-accent-primary), var(--color-accent-tertiary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header .timestamp {
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+        }
+        
+        /* Stat Cards */
+        .stat-card .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--color-text-header);
+            margin-bottom: 8px;
+        }
+        .stat-card .stat-label {
+            font-size: 1rem;
+            color: var(--color-text-secondary);
+            font-weight: 500;
+        }
+        .stat-card .stat-delta {
+            font-size: 0.85rem;
+            padding: 2px 8px;
+            border-radius: 99px;
+            font-weight: 600;
+            margin-top: 16px;
+            display: inline-block;
+        }
+        .stat-card .stat-delta.positive {
+            background-color: rgba(0, 245, 212, 0.1);
+            color: var(--color-accent-primary);
+        }
+        .stat-card .stat-delta.neutral {
+            background-color: rgba(142, 152, 197, 0.1);
+            color: var(--color-text-secondary);
+        }
+
+        /* Connection Flow Diagram */
+        .connection-flow svg {
+            width: 100%;
+            height: 100%;
+            min-height: 500px;
+            font-family: var(--font-family);
+            overflow: visible;
+        }
+        .flow-node circle {
+            stroke-width: 2;
+            stroke: var(--color-accent-secondary);
+            fill: var(--color-bg-secondary);
+            transition: all 0.3s ease;
+        }
+        .flow-node:hover circle {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 8px var(--color-accent-secondary));
+        }
+        .flow-node text {
+            fill: var(--color-text-primary);
+            font-size: 12px;
+            font-weight: 500;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+        .flow-node .node-count {
+            fill: var(--color-text-secondary);
+            font-size: 10px;
+            dy: 1.2em;
+        }
+        .flow-link {
+            stroke: var(--color-border-glow);
+            stroke-width: 1;
+            fill: none;
+        }
+        .flow-link-pulse {
+            stroke: var(--color-accent-primary);
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 10 10;
+            animation: pulse-flow 4s linear infinite;
+            opacity: 0.8;
+        }
+        @keyframes pulse-flow {
+            to { stroke-dashoffset: -40; }
+        }
+        .flow-node .pulse-circle {
+            stroke: var(--color-accent-secondary);
+            stroke-width: 2;
+            fill: none;
+            animation: pulse-node 2.5s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
+        }
+        @keyframes pulse-node {
+            0% { transform: scale(1); opacity: 0.7; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+
+        /* Architectural Layers */
+        .layers-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            height: 100%;
+        }
+        .layer-item {
+            padding: 16px;
+            border-radius: 12px;
+            border-left: 4px solid;
+            background: linear-gradient(90deg, rgba(26,29,45,0.8), rgba(26,29,45,0.4));
+            transition: background 0.3s ease;
+        }
+        .layer-item:hover {
+             background: linear-gradient(90deg, rgba(30,34,55,0.9), rgba(30,34,55,0.5));
+        }
+        .layer-item h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .layer-item p {
+            font-size: 0.85rem;
+            color: var(--color-text-secondary);
+            line-height: 1.5;
+        }
+        #layer-execution { border-color: #00F5D4; }
+        #layer-evaluation { border-color: #8A42D8; }
+        #layer-support { border-color: #F82282; }
+        #layer-pipeline { border-color: #3f8eff; }
+        #layer-execution h3 { color: #00F5D4; }
+        #layer-evaluation h3 { color: #8A42D8; }
+        #layer-support h3 { color: #F82282; }
+        #layer-pipeline h3 { color: #3f8eff; }
+
+        /* Tag Coverage Heatmap */
+        .heatmap-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+        }
+        .heatmap-cell {
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .heatmap-cell:hover {
+            transform: scale(1.05);
+            border-color: var(--color-border-glow);
+        }
+        .heatmap-cell .tag-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--color-text-header);
+            text-transform: capitalize;
+        }
+        .heatmap-cell .tag-coverage {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        /* Chart Canvas */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .app-usage .chart-container { height: 350px; }
+        .entity-types .chart-container { height: 350px; }
+
+        /* Responsive Design */
+        @media (max-width: 1400px) {
+            .connection-flow { grid-column: 1 / -1; grid-row: 2 / 3; }
+            .architectural-layers { grid-column: 1 / -1; grid-row: 3 / 4; }
+            .app-usage { grid-column: 1 / -1; }
+            .entity-types { grid-column: 1 / -1; }
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-container { grid-template-columns: repeat(6, 1fr); padding: 16px; }
+            .header { grid-column: 1 / -1; }
+            .stat-card { grid-column: span 3; }
+            .connection-flow, .architectural-layers, .app-usage, .entity-types, .tag-coverage, .connection-types { grid-column: 1 / -1; }
+            .connection-flow { grid-row: auto; }
+            .architectural-layers { grid-row: auto; }
+            .flow-node text { font-size: 10px; }
+            .flow-node .node-count { font-size: 8px; }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-container { grid-template-columns: 1fr; }
+            .stat-card { grid-column: 1 / -1; }
+            .header h1 { font-size: 1.5rem; }
+            .header .timestamp { display: none; }
+        }
+
+    </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="header-top">
-    <div class="logo">⚡</div>
-    <div>
-      <h1>Catalyst AI Registry</h1>
-      <div class="sub">Mission Control Dashboard — Live Data · Feb 19, 2026</div>
-    </div>
-  </div>
-  <div class="stats" id="stats"></div>
-</div>
+    <main class="dashboard-container">
+        
+        <header class="header">
+            <h1>Catalyst AI Registry</h1>
+            <div class="timestamp">Last Updated: <span id="last-updated"></span></div>
+        </header>
 
-<div class="main">
-  <!-- Entity Distribution -->
-  <div class="card">
-    <div class="card-head"><div class="dot" style="background:#38bdf8"></div><h2>Entity Distribution</h2></div>
-    <div class="card-body" id="entity-bars"></div>
-  </div>
+        <article class="card stat-card">
+            <div class="stat-value" id="total-entities">735</div>
+            <div class="stat-label">Total Entities</div>
+            <div class="stat-delta neutral">16 Types</div>
+        </article>
 
-  <!-- Link Types -->
-  <div class="card">
-    <div class="card-head"><div class="dot" style="background:#4ade80"></div><h2>Link Graph · 2,425 connections</h2></div>
-    <div class="card-body">
-      <table class="ltable" id="link-table"></table>
-    </div>
-  </div>
+        <article class="card stat-card">
+            <div class="stat-value" id="total-connections">2,425</div>
+            <div class="stat-label">Total Connections</div>
+             <div class="stat-delta neutral">11 Link Types</div>
+        </article>
+        
+        <article class="card stat-card">
+            <div class="stat-value" id="tag-coverage">99.7%</div>
+            <div class="stat-label">Core Tag Coverage</div>
+            <div class="stat-delta positive">'scope' & 'status' tags</div>
+        </article>
 
-  <!-- Connection Flow -->
-  <div class="card full">
-    <div class="card-head"><div class="dot" style="background:#fbbf24"></div><h2>Cross-Type Connections — How Entity Types Wire Together</h2></div>
-    <div class="card-body" id="flow-container"></div>
-  </div>
+        <article class="card stat-card">
+            <div class="stat-value" id="artifact-health">52.5%</div>
+            <div class="stat-label">Artifact Health</div>
+            <div class="stat-delta neutral">850 / 1620 Revisions</div>
+        </article>
 
-  <!-- Tag Coverage -->
-  <div class="card">
-    <div class="card-head"><div class="dot" style="background:#c084fc"></div><h2>Tag Namespace Coverage</h2></div>
-    <div class="card-body"><div class="tag-grid" id="tag-grid"></div></div>
-  </div>
+        <section class="card connection-flow">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Connection Flow</h2>
+                    <p class="card-subtitle">Cross-type entity relationships</p>
+                </div>
+            </div>
+            <svg id="connection-flow-svg" viewBox="0 0 800 500">
+                <!-- Nodes -->
+                <g class="flow-node" id="node-ct" transform="translate(400, 250)">
+                    <circle class="pulse-circle" r="50"></circle><circle r="50"></circle>
+                    <text>Content Types</text><text class="node-count">113</text>
+                </g>
+                <g class="flow-node" id="node-recipes" transform="translate(200, 100)">
+                    <circle r="40"></circle><text>Recipes</text><text class="node-count">118</text>
+                </g>
+                <g class="flow-node" id="node-tools" transform="translate(600, 100)">
+                    <circle r="30"></circle><text>Tools</text><text class="node-count">42</text>
+                </g>
+                <g class="flow-node" id="node-prompts" transform="translate(650, 250)">
+                    <circle r="28"></circle><text>Prompts</text><text class="node-count">31</text>
+                </g>
+                <g class="flow-node" id="node-rubrics" transform="translate(600, 400)">
+                    <circle r="25"></circle><text>Rubrics</text><text class="node-count">25</text>
+                </g>
+                <g class="flow-node" id="node-metrics" transform="translate(400, 450)">
+                    <circle r="32"></circle><text>Metrics</text><text class="node-count">55</text>
+                </g>
+                <g class="flow-node" id="node-styles" transform="translate(200, 400)">
+                    <circle r="30"></circle><text>Styles</text><text class="node-count">48</text>
+                </g>
+                <g class="flow-node" id="node-channels" transform="translate(150, 250)">
+                    <circle r="28"></circle><text>Channels</text><text class="node-count">27</text>
+                </g>
+                <g class="flow-node" id="node-schemas" transform="translate(100, 100)">
+                    <circle r="25"></circle><text>Schemas</text><text class="node-count">21</text>
+                </g>
+                 <g class="flow-node" id="node-skills" transform="translate(400, 50)">
+                    <circle r="45"></circle><text>Skills</text><text class="node-count">160</text>
+                </g>
+                 <g class="flow-node" id="node-kb" transform="translate(200, 250)">
+                    <circle r="32"></circle><text>KB Items</text><text class="node-count">54</text>
+                </g>
 
-  <!-- Artifact Health -->
-  <div class="card">
-    <div class="card-head"><div class="dot" style="background:#2dd4bf"></div><h2>Artifact Health · 52.5% coverage</h2></div>
-    <div class="card-body">
-      <div class="artifact-row">
-        <div class="donut-wrap"><canvas id="donut-chart"></canvas><div class="donut-center"><div class="pct">52.5%</div><div class="plbl">with artifacts</div></div></div>
-        <div class="art-list" id="art-list"></div>
-      </div>
-    </div>
-  </div>
+                <!-- Links -->
+                <defs>
+                    <path id="link-ct-recipes" class="flow-link" d="M370,220 Q280,180 230,125"></path>
+                    <path id="link-ct-tools" class="flow-link" d="M430,220 Q520,180 580,125"></path>
+                    <path id="link-ct-prompts" class="flow-link" d="M450,250 H 622"></path>
+                    <path id="link-ct-rubrics" class="flow-link" d="M430,280 Q520,320 580,375"></path>
+                    <path id="link-ct-metrics" class="flow-link" d="M400,300 V 418"></path>
+                    <path id="link-ct-styles" class="flow-link" d="M370,280 Q280,320 230,375"></path>
+                    <path id="link-ct-channels" class="flow-link" d="M350,250 H 178"></path>
+                    <path id="link-recipes-schemas" class="flow-link" d="M180,90 Q140,95 120,100"></path>
+                    <path id="link-skills-tools" class="flow-link" d="M445,65 Q500,75 575,90"></path>
+                    <path id="link-skills-kb" class="flow-link" d="M365,75 Q280,150 230,230"></path>
+                    <path id="link-metrics-rubrics" class="flow-link" d="M425,435 Q500,420 575,405"></path>
+                    <path id="link-kb-ct" class="flow-link" d="M232,250 H 350"></path>
+                </defs>
+                <g>
+                    <use href="#link-ct-recipes"></use><use href="#link-ct-tools"></use><use href="#link-ct-prompts"></use>
+                    <use href="#link-ct-rubrics"></use><use href="#link-ct-metrics"></use><use href="#link-ct-styles"></use>
+                    <use href="#link-ct-channels"></use><use href="#link-recipes-schemas"></use><use href="#link-skills-tools"></use>
+                    <use href="#link-skills-kb"></use><use href="#link-metrics-rubrics"></use><use href="#link-kb-ct"></use>
+                </g>
+                <g class="flow-link-pulse">
+                    <use href="#link-ct-recipes"></use><use href="#link-ct-tools"></use><use href="#link-ct-prompts"></use>
+                    <use href="#link-ct-rubrics"></use><use href="#link-ct-metrics"></use><use href="#link-ct-styles"></use>
+                    <use href="#link-ct-channels"></use><use href="#link-recipes-schemas"></use><use href="#link-skills-tools"></use>
+                    <use href="#link-skills-kb"></use><use href="#link-metrics-rubrics"></use><use href="#link-kb-ct"></use>
+                </g>
+            </svg>
+        </section>
 
-  <!-- App Portfolio -->
-  <div class="card">
-    <div class="card-head"><div class="dot" style="background:#f59e0b"></div><h2>App Portfolio · 208 apps across 4 tiers</h2></div>
-    <div class="card-body"><div class="tree-row" id="treemap"></div></div>
-  </div>
+        <section class="card architectural-layers">
+             <div class="card-header">
+                <div>
+                    <h2 class="card-title">Architectural Layers</h2>
+                    <p class="card-subtitle">Logical grouping of entity types</p>
+                </div>
+            </div>
+            <div class="layers-container">
+                <div class="layer-item" id="layer-execution">
+                    <h3>Execution Layer</h3>
+                    <p>Playbooks, Bundles, Agents</p>
+                </div>
+                <div class="layer-item" id="layer-evaluation">
+                    <h3>Evaluation Layer</h3>
+                    <p>Metrics, Rubrics, Lint Rules</p>
+                </div>
+                <div class="layer-item" id="layer-support">
+                    <h3>Support Layer</h3>
+                    <p>Skills, KB, Tools, Prompts</p>
+                </div>
+                <div class="layer-item" id="layer-pipeline">
+                    <h3>Content Pipeline Layer</h3>
+                    <p>Content Types, Recipes, Schemas, Styles, Channels</p>
+                </div>
+            </div>
+        </section>
 
-  <!-- Architecture -->
-  <div class="card full">
-    <div class="card-head"><div class="dot" style="background:#f472b6"></div><h2>System Architecture — 4 Layers</h2></div>
-    <div class="card-body" id="architecture"></div>
-  </div>
-</div>
+        <section class="card app-usage">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Application Usage</h2>
+                    <p class="card-subtitle">208 total applications by tier</p>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="appUsageChart"></canvas>
+            </div>
+        </section>
 
-<script>
-// ─── DATA ───
-const C = {
-  skill:'#38bdf8', recipe:'#4ade80', content_type:'#fbbf24', metric:'#c084fc',
-  kb:'#f87171', style:'#a78bfa', tool:'#fb923c', prompt:'#f472b6',
-  channel:'#60a5fa', rubric:'#a3e635', schema:'#34d399', playbook:'#2dd4bf',
-  bundle:'#67e8f9', lint_rule:'#e879f9', agent:'#818cf8', lint_ruleset:'#eab308'
-};
+        <section class="card entity-types">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Entity Types Distribution</h2>
+                    <p class="card-subtitle">Count per entity type</p>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="entityTypesChart"></canvas>
+            </div>
+        </section>
+        
+        <section class="card tag-coverage">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Tag Coverage</h2>
+                    <p class="card-subtitle">Percentage of 735 entities with tag</p>
+                </div>
+            </div>
+            <div class="heatmap-container" id="tag-heatmap">
+                <!-- Cells will be generated by JS -->
+            </div>
+        </section>
+        
+        <section class="card connection-types">
+             <div class="card-header">
+                <div>
+                    <h2 class="card-title">Connection Types</h2>
+                    <p class="card-subtitle">Distribution of link types</p>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="connectionTypesChart"></canvas>
+            </div>
+        </section>
 
-const entities = [
-  {n:'Skills',v:160,c:C.skill},{n:'Recipes',v:118,c:C.recipe},{n:'Content Types',v:113,c:C.content_type},
-  {n:'Metrics',v:55,c:C.metric},{n:'KB Items',v:54,c:C.kb},{n:'Styles',v:48,c:C.style},
-  {n:'Tools',v:42,c:C.tool},{n:'Prompts',v:31,c:C.prompt},{n:'Channels',v:27,c:C.channel},
-  {n:'Rubrics',v:25,c:C.rubric},{n:'Schemas',v:21,c:C.schema},{n:'Playbooks',v:13,c:C.playbook},
-  {n:'Bundles',v:11,c:C.bundle},{n:'Lint Rules',v:8,c:C.lint_rule},{n:'Agents',v:6,c:C.agent},
-  {n:'Lint Rulesets',v:3,c:C.lint_ruleset}
-];
+    </main>
 
-const links = [
-  {type:'requires',cnt:714,clr:'#ef4444'},{type:'recommends',cnt:555,clr:'#3b82f6'},
-  {type:'related',cnt:506,clr:'#6b7280'},{type:'uses_tool',cnt:210,clr:'#fb923c'},
-  {type:'uses_prompt',cnt:125,clr:'#a78bfa'},{type:'bundle_member',cnt:107,clr:'#d946ef'},
-  {type:'uses_kb',cnt:70,clr:'#60a5fa'},{type:'alternate',cnt:67,clr:'#78716c'},
-  {type:'pairs_with',cnt:59,clr:'#ec4899'},{type:'often_follows',cnt:9,clr:'#84cc16'},
-  {type:'prerequisite',cnt:2,clr:'#fca5a5'},{type:'parent',cnt:1,clr:'#5eead4'}
-];
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Data
+            const entityData = {
+                'Skills': 160, 'Recipes': 118, 'Content Types': 113, 'Metrics': 55, 'KB Items': 54,
+                'Styles': 48, 'Tools': 42, 'Prompts': 31, 'Channels': 27, 'Rubrics': 25, 'Schemas': 21,
+                'Playbooks': 13, 'Bundles': 11, 'Lint Rules': 8, 'Agents': 6, 'Lint Rulesets': 3
+            };
 
-const tags = [
-  {n:'scope',v:733},{n:'status',v:732},{n:'modality',v:473},{n:'format',v:426},
-  {n:'channel',v:248},{n:'source',v:232},{n:'domain',v:227},{n:'action',v:175},
-  {n:'family',v:115},{n:'stage',v:103},{n:'surface',v:78},{n:'partner',v:65},
-  {n:'tool_type',v:52},{n:'provider',v:46},{n:'dept',v:16},{n:'persona_role',v:6}
-];
+            const appData = { 'Tier 1': 5, 'Tier 2': 8, 'Tier 3': 8, 'Tier 4': 2, 'Untiered': 185 };
 
-const artifacts = [
-  {n:'Skills',v:271,c:C.skill},{n:'Recipes',v:118,c:C.recipe},{n:'Content Types',v:113,c:C.content_type},
-  {n:'Metrics',v:59,c:C.metric},{n:'KB Items',v:54,c:C.kb},{n:'Styles',v:48,c:C.style},
-  {n:'Tools',v:39,c:C.tool},{n:'Prompts',v:31,c:C.prompt},{n:'Channels',v:30,c:C.channel},
-  {n:'Rubrics',v:25,c:C.rubric}
-];
+            const tagData = {
+                scope: 733, status: 732, modality: 473, format: 426, channel: 248, source: 232,
+                domain: 227, action: 175, family: 115, stage: 103, surface: 78, partner: 65,
+                tool_type: 52, provider: 46, dept: 16, persona_role: 6
+            };
+            
+            const connectionData = {
+                'requires':714, 'recommends':555, 'related':506, 'uses_tool':210, 'uses_prompt':125,
+                'bundle_member':107, 'uses_kb':70, 'alternate':67, 'pairs_with':59, 'often_follows':9,
+                'prerequisite':2, 'parent':1
+            };
 
-const apps = [{n:'Tier 1',v:5,c:'#38bdf8'},{n:'Tier 2',v:8,c:'#818cf8'},{n:'Tier 3',v:8,c:'#c084fc'},{n:'Tier 4',v:2,c:'#f472b6'},{n:'Untiered',v:185,c:'#52525b'}];
+            // Timestamp
+            document.getElementById('last-updated').textContent = new Date().toLocaleString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
 
-// ─── ANIMATED COUNTER ───
-function animateValue(el, end, dur=1500) {
-  let start=0, startTime=null;
-  function step(ts) {
-    if(!startTime) startTime=ts;
-    const p=Math.min((ts-startTime)/dur,1);
-    el.textContent=Math.floor(p*end).toLocaleString();
-    if(p<1) requestAnimationFrame(step);
-    else el.textContent=end.toLocaleString();
-  }
-  requestAnimationFrame(step);
-}
+            // Chart.js Global Config
+            Chart.defaults.color = 'rgba(142, 152, 197, 0.8)';
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.font.weight = '500';
 
-// ─── STATS ───
-const statsData = [{l:'Total Entities',v:735,a:true},{l:'Entity Types',v:16},{l:'Total Links',v:2425,a:true},{l:'Connected Apps',v:208},{l:'Revisions',v:1620},{l:'With Artifacts',v:850}];
-const statsEl = document.getElementById('stats');
-statsData.forEach(s => {
-  const d = document.createElement('div');
-  d.className = 'stat-card';
-  d.innerHTML = `<div class="val ${s.a?'stat-accent':''}" data-target="${s.v}">0</div><div class="lbl">${s.l}</div>`;
-  statsEl.appendChild(d);
-});
+            // Chart Utils
+            const createGradient = (ctx, chartArea, color1, color2) => {
+                const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                gradient.addColorStop(0, color1);
+                gradient.addColorStop(1, color2);
+                return gradient;
+            };
 
-// Animate on load
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if(e.isIntersecting) {
-      document.querySelectorAll('.val[data-target]').forEach(el => {
-        animateValue(el, parseInt(el.dataset.target));
-      });
-      observer.disconnect();
-    }
-  });
-},{threshold:0.1});
-observer.observe(statsEl);
+            // 1. App Usage Treemap Chart
+            const appUsageCtx = document.getElementById('appUsageChart').getContext('2d');
+            new Chart(appUsageCtx, {
+                type: 'treemap',
+                data: {
+                    datasets: [{
+                        tree: Object.entries(appData).map(([key, value]) => ({ name: key, value: value })),
+                        key: 'value',
+                        groups: ['name'],
+                        backgroundColor: (ctx) => {
+                            if (ctx.type !== 'data') return 'transparent';
+                            const value = ctx.raw.g;
+                            const tierColors = {
+                                'Tier 1': 'rgba(0, 245, 212, 0.8)',
+                                'Tier 2': 'rgba(0, 245, 212, 0.6)',
+                                'Tier 3': 'rgba(138, 66, 216, 0.7)',
+                                'Tier 4': 'rgba(138, 66, 216, 0.5)',
+                                'Untiered': 'rgba(142, 152, 197, 0.4)'
+                            };
+                            return tierColors[value] || 'rgba(142, 152, 197, 0.4)';
+                        },
+                        borderColor: '#0D0F18',
+                        borderWidth: 2,
+                        spacing: 2,
+                        labels: {
+                            display: true,
+                            color: '#FFFFFF',
+                            font: { size: 14, weight: '600' },
+                            formatter: (ctx) => [ctx.raw.g, `${ctx.raw.v} apps`],
+                        }
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    }
+                }
+            });
 
-// ─── ENTITY BARS ───
-const barsEl = document.getElementById('entity-bars');
-const maxVal = entities[0].v;
-entities.forEach((e,i) => {
-  const d = document.createElement('div');
-  d.className = 'ebar';
-  d.innerHTML = `<div class="ebar-name">${e.n}</div><div class="ebar-track"><div class="ebar-fill" style="width:0%;background:${e.c}">${e.v}</div></div>`;
-  barsEl.appendChild(d);
-  setTimeout(() => {
-    d.querySelector('.ebar-fill').style.width = `${(e.v/maxVal)*100}%`;
-  }, 100 + i*50);
-});
+            // 2. Entity Types Bar Chart
+            const entityTypesCtx = document.getElementById('entityTypesChart').getContext('2d');
+            const sortedEntities = Object.entries(entityData).sort(([,a],[,b]) => b-a);
+            new Chart(entityTypesCtx, {
+                type: 'bar',
+                data: {
+                    labels: sortedEntities.map(e => e[0]),
+                    datasets: [{
+                        label: 'Entity Count',
+                        data: sortedEntities.map(e => e[1]),
+                        backgroundColor: (context) => {
+                            const chart = context.chart;
+                            const {ctx, chartArea} = chart;
+                            if (!chartArea) return null;
+                            return createGradient(ctx, chartArea, 'rgba(0, 245, 212, 0.7)', 'rgba(138, 66, 216, 0.7)');
+                        },
+                        borderColor: 'transparent',
+                        borderRadius: 4,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(142, 152, 197, 0.1)' },
+                            ticks: { font: { size: 11 } }
+                        },
+                        x: {
+                            grid: { display: false },
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#131523',
+                            titleFont: { weight: 'bold' },
+                            bodyFont: { size: 14 },
+                            padding: 12,
+                            cornerRadius: 8,
+                        }
+                    }
+                }
+            });
 
-// ─── LINK TABLE ───
-const ltEl = document.getElementById('link-table');
-ltEl.innerHTML = '<thead><tr><th>Link Type</th><th>Count</th><th>Visual</th></tr></thead><tbody>' +
-  links.map(l => `<tr><td><span class="lbadge" style="background:${l.clr}22;color:${l.clr}">${l.type}</span></td><td style="color:#f4f4f5;font-weight:600">${l.cnt}</td><td><div style="width:${(l.cnt/714)*100}%;height:6px;background:${l.clr};border-radius:3px;min-width:4px"></div></td></tr>`).join('') +
-  '</tbody>';
+            // 3. Connection Types Bar Chart
+            const connectionTypesCtx = document.getElementById('connectionTypesChart').getContext('2d');
+            const sortedConnections = Object.entries(connectionData).sort(([,a],[,b]) => b-a).slice(0, 7);
+            new Chart(connectionTypesCtx, {
+                type: 'bar',
+                data: {
+                    labels: sortedConnections.map(c => c[0]),
+                    datasets: [{
+                        label: 'Connection Count',
+                        data: sortedConnections.map(c => c[1]),
+                        backgroundColor: (context) => {
+                            const chart = context.chart;
+                            const {ctx, chartArea} = chart;
+                            if (!chartArea) return null;
+                            return createGradient(ctx, chartArea, 'rgba(248, 34, 130, 0.7)', 'rgba(138, 66, 216, 0.7)');
+                        },
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                         x: { grid: { display: false } },
+                         y: { grid: { color: 'rgba(142, 152, 197, 0.1)' } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                         tooltip: {
+                            backgroundColor: '#131523',
+                            titleFont: { weight: 'bold' },
+                            bodyFont: { size: 14 },
+                            padding: 12,
+                            cornerRadius: 8,
+                        }
+                    }
+                }
+            });
 
-// ─── CONNECTION FLOW (SVG) ───
-const flowEl = document.getElementById('flow-container');
-const W=860, H=400;
-const nodes = [
-  {id:'content_type',x:80,y:200,r:45,label:'Content\nTypes',c:C.content_type},
-  {id:'recipe',x:250,y:80,r:35,label:'Recipes',c:C.recipe},
-  {id:'skill',x:250,y:320,r:42,label:'Skills',c:C.skill},
-  {id:'schema',x:430,y:40,r:22,label:'Schemas',c:C.schema},
-  {id:'style',x:430,y:130,r:26,label:'Styles',c:C.style},
-  {id:'channel',x:430,y:220,r:24,label:'Channels',c:C.channel},
-  {id:'tool',x:430,y:310,r:26,label:'Tools',c:C.tool},
-  {id:'kb',x:430,y:390,r:26,label:'KB Items',c:C.kb},
-  {id:'prompt',x:620,y:80,r:22,label:'Prompts',c:C.prompt},
-  {id:'rubric',x:620,y:180,r:22,label:'Rubrics',c:C.rubric},
-  {id:'metric',x:620,y:280,r:26,label:'Metrics',c:C.metric},
-  {id:'playbook',x:780,y:80,r:18,label:'Playbooks',c:C.playbook},
-  {id:'bundle',x:780,y:180,r:16,label:'Bundles',c:C.bundle},
-  {id:'agent',x:780,y:280,r:14,label:'Agents',c:C.agent},
-];
 
-const conns = [
-  // Content Types → everything (113 each)
-  {from:'content_type',to:'recipe',w:5,v:113},{from:'content_type',to:'style',w:5,v:113},
-  {from:'content_type',to:'channel',w:5,v:113},{from:'content_type',to:'tool',w:5,v:113},
-  {from:'content_type',to:'prompt',w:4,v:113},{from:'content_type',to:'rubric',w:4,v:113},
-  {from:'content_type',to:'metric',w:4,v:113},
-  // Recipes → schema/style/channel (118)
-  {from:'recipe',to:'schema',w:5,v:118},{from:'recipe',to:'style',w:5,v:118},{from:'recipe',to:'channel',w:5,v:118},
-  // Skills → tools/kb/skills
-  {from:'skill',to:'tool',w:3.5,v:82},{from:'skill',to:'kb',w:3,v:68},
-  // Metrics → rubrics
-  {from:'metric',to:'rubric',w:3,v:76},
-  // KB → various
-  {from:'kb',to:'style',w:2,v:46},{from:'kb',to:'channel',w:2,v:46},{from:'kb',to:'content_type',w:2,v:46},
-  // Playbooks/bundles
-  {from:'playbook',to:'bundle',w:2,v:30},{from:'playbook',to:'prompt',w:1.5,v:11},
-];
+            // 4. Tag Coverage Heatmap
+            const heatmapContainer = document.getElementById('tag-heatmap');
+            const sortedTags = Object.entries(tagData).sort(([,a],[,b]) => b-a);
+            const totalEntities = 735;
+            const colorScale = (p) => {
+                const r = 248 - p * (248 - 0);
+                const g = 34 + p * (245 - 34);
+                const b = 130 + p * (212 - 130);
+                const a = 0.2 + p * 0.6;
+                return `rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, ${a})`;
+            };
 
-let svg = `<svg viewBox="0 0 ${W} ${H}" class="flow-svg">`;
-svg += '<defs>';
-conns.forEach((conn,i) => {
-  const f = nodes.find(n=>n.id===conn.from);
-  const t = nodes.find(n=>n.id===conn.to);
-  svg += `<linearGradient id="lg${i}" x1="${f.x}" y1="${f.y}" x2="${t.x}" y2="${t.y}" gradientUnits="userSpaceOnUse">
-    <stop offset="0%" stop-color="${f.c}" stop-opacity="0.6"/>
-    <stop offset="100%" stop-color="${t.c}" stop-opacity="0.6"/>
-  </linearGradient>`;
-});
-svg += '</defs>';
-
-// Draw connections
-conns.forEach((conn,i) => {
-  const f = nodes.find(n=>n.id===conn.from);
-  const t = nodes.find(n=>n.id===conn.to);
-  const mx = (f.x+t.x)/2;
-  svg += `<path d="M${f.x},${f.y} C${mx},${f.y} ${mx},${t.y} ${t.x},${t.y}" fill="none" stroke="url(#lg${i})" stroke-width="${conn.w}" opacity="0.5">
-    <title>${f.label.replace('\n',' ')} → ${t.label.replace('\n',' ')}: ${conn.v} links</title>
-  </path>`;
-});
-
-// Draw nodes
-nodes.forEach(n => {
-  svg += `<circle cx="${n.x}" cy="${n.y}" r="${n.r}" fill="${n.c}" opacity="0.85" stroke="${n.c}" stroke-width="2" stroke-opacity="0.3"/>`;
-  const lines = n.label.split('\n');
-  lines.forEach((line,i) => {
-    const yOff = (i - (lines.length-1)/2) * 13;
-    svg += `<text x="${n.x}" y="${n.y+yOff+4}" text-anchor="middle" fill="white" font-size="11" font-weight="700">${line}</text>`;
-  });
-});
-
-// Layer labels
-svg += `<text x="80" y="16" text-anchor="middle" fill="#52525b" font-size="10" font-weight="600">CONTENT HUB</text>`;
-svg += `<text x="340" y="16" text-anchor="middle" fill="#52525b" font-size="10" font-weight="600">BINDING LAYER</text>`;
-svg += `<text x="620" y="16" text-anchor="middle" fill="#52525b" font-size="10" font-weight="600">EVALUATION</text>`;
-svg += `<text x="780" y="16" text-anchor="middle" fill="#52525b" font-size="10" font-weight="600">EXECUTION</text>`;
-svg += '</svg>';
-flowEl.innerHTML = svg;
-
-// ─── TAG HEATMAP ───
-const tagEl = document.getElementById('tag-grid');
-const tagMax = tags[0].v;
-tags.forEach(t => {
-  const pct = t.v/tagMax;
-  const op = Math.max(0.12, pct * 0.85);
-  const d = document.createElement('div');
-  d.className = 'tag-cell';
-  d.style.background = `rgba(192,132,252,${op})`;
-  d.innerHTML = `<div class="tn">${t.n}</div><div class="tv">${t.v} entities</div>`;
-  tagEl.appendChild(d);
-});
-
-// ─── ARTIFACT DONUT ───
-new Chart(document.getElementById('donut-chart'), {
-  type:'doughnut',
-  data:{labels:['With Artifacts','Without'],datasets:[{data:[850,770],backgroundColor:['#2dd4bf','#27272a'],borderWidth:0}]},
-  options:{cutout:'70%',plugins:{legend:{display:false},tooltip:{enabled:false}},responsive:true,maintainAspectRatio:true}
-});
-
-const artEl = document.getElementById('art-list');
-artifacts.forEach(a => {
-  artEl.innerHTML += `<div class="ai"><div class="adot" style="background:${a.c}"></div><span style="color:#a1a1aa">${a.n}</span> <span style="color:#f4f4f5;font-weight:600;margin-left:auto">${a.v}</span></div>`;
-});
-
-// ─── APP TREEMAP ───
-const treeEl = document.getElementById('treemap');
-const totalApps = apps.reduce((s,a)=>s+a.v,0);
-apps.forEach(a => {
-  const d = document.createElement('div');
-  d.className = 'tree-block';
-  d.style.flex = a.v;
-  d.style.background = a.c;
-  d.innerHTML = `<div class="tb-name">${a.n}</div><div class="tb-val">${a.v} apps</div>`;
-  treeEl.appendChild(d);
-});
-
-// ─── ARCHITECTURE ───
-const archEl = document.getElementById('architecture');
-archEl.innerHTML = `
-<div class="arch-layers">
-  <div class="arch-row">
-    <div class="arch-layer">
-      <h3 style="border-bottom:2px solid ${C.content_type};color:${C.content_type}">Content Pipeline</h3>
-      <div class="arch-pills">
-        <span class="arch-pill" style="background:${C.content_type}">Content Types · 113</span>
-        <span class="arch-pill" style="background:${C.recipe}">Recipes · 118</span>
-        <span class="arch-pill" style="background:${C.schema}">Schemas · 21</span>
-        <span class="arch-pill" style="background:${C.style}">Styles · 48</span>
-        <span class="arch-pill" style="background:${C.channel}">Channels · 27</span>
-      </div>
-    </div>
-    <div class="arch-layer">
-      <h3 style="border-bottom:2px solid ${C.skill};color:${C.skill}">Support Layer</h3>
-      <div class="arch-pills">
-        <span class="arch-pill" style="background:${C.skill}">Skills · 160</span>
-        <span class="arch-pill" style="background:${C.kb}">KB Items · 54</span>
-        <span class="arch-pill" style="background:${C.tool}">Tools · 42</span>
-        <span class="arch-pill" style="background:${C.prompt}">Prompts · 31</span>
-      </div>
-    </div>
-  </div>
-  <div class="arch-arrow">▼ entity_links (2,425) · entity_tags · entity_revisions · entity_embeddings ▼</div>
-  <div class="arch-row">
-    <div class="arch-layer">
-      <h3 style="border-bottom:2px solid ${C.metric};color:${C.metric}">Evaluation Layer</h3>
-      <div class="arch-pills">
-        <span class="arch-pill" style="background:${C.metric}">Metrics · 55</span>
-        <span class="arch-pill" style="background:${C.rubric}">Rubrics · 25</span>
-        <span class="arch-pill" style="background:${C.lint_rule}">Lint Rules · 8</span>
-      </div>
-    </div>
-    <div class="arch-layer">
-      <h3 style="border-bottom:2px solid ${C.playbook};color:${C.playbook}">Execution Layer</h3>
-      <div class="arch-pills">
-        <span class="arch-pill" style="background:${C.playbook}">Playbooks · 13</span>
-        <span class="arch-pill" style="background:${C.bundle}">Bundles · 11</span>
-        <span class="arch-pill" style="background:${C.agent}">Agents · 6</span>
-      </div>
-    </div>
-  </div>
-</div>`;
-</script>
-
+            sortedTags.forEach(([name, count]) => {
+                const percentage = count / totalEntities;
+                const cell = document.createElement('div');
+                cell.className = 'heatmap-cell';
+                cell.style.background = colorScale(percentage);
+                cell.innerHTML = `
+                    <div class="tag-name">${name.replace('_', ' ')}</div>
+                    <div class="tag-coverage" style="color: ${percentage > 0.6 ? '#E0E4FA' : '#8E98C5'}">${(percentage * 100).toFixed(1)}%</div>
+                `;
+                heatmapContainer.appendChild(cell);
+            });
+        });
+    </script>
 </body>
 </html>
