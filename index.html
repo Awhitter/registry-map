@@ -120,6 +120,20 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 .footer{text-align:center;padding:48px 0 24px;border-top:1px solid var(--border-s);margin-top:48px}
 .footer-brand{font-size:13px;font-weight:700;color:var(--fg-muted);margin-bottom:4px}
 .footer-sub{font-size:11px;color:var(--fg-subtle)}
+
+/* Units reference grid */
+.units-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:1000px){.units-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.units-grid{grid-template-columns:1fr}}
+.unit-card{background:var(--card);border:1px solid var(--border-s);border-radius:14px;padding:20px;transition:all .3s;position:relative;overflow:hidden}
+.unit-card:hover{background:var(--card-h);border-color:var(--border);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.unit-card .uc-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.unit-card .uc-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.unit-card .uc-name{font-size:14px;font-weight:800;color:#f4f4f5}
+.unit-card .uc-count{font-size:11px;font-weight:700;color:var(--fg-subtle);margin-left:auto}
+.unit-card .uc-desc{font-size:11px;color:var(--fg-muted);line-height:1.5;margin-bottom:10px}
+.unit-card .uc-meta{display:flex;flex-wrap:wrap;gap:4px}
+.unit-card .uc-tag{font-size:9px;font-weight:600;padding:2px 6px;border-radius:3px;background:rgba(255,255,255,.05);color:var(--fg-subtle)}
 </style>
 </head>
 <body>
@@ -209,6 +223,10 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
   <div class="card-h"><div class="dot" style="background:#e879f9"></div><h2>System Architecture</h2></div>
   <div class="card-b" id="arch"></div>
 </div>
+
+<div class="divider"><div class="divider-line"></div><div class="divider-label">The 16 Atomic Units</div><div class="divider-line"></div></div>
+
+<div class="units-grid reveal" id="unitsGrid"></div>
 
 <div class="footer">
   <div class="footer-brand">Catalyst AI Registry</div>
@@ -366,6 +384,32 @@ new Chart(document.getElementById('kbChart'),{
   type:'bar',
   data:{labels:['Snippet','Distilled','Full'],datasets:[{label:'Avg Length',data:[486,1325,2376],backgroundColor:['#f87171aa','#fbbf24aa','#4ade80aa'],borderRadius:4},{label:'Max Length',data:[3017,2026,4381],backgroundColor:['#f8717144','#fbbf2444','#4ade8044'],borderRadius:4}]},
   options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#94a3b8'}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#64748b',font:{size:9}}}},plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}}}
+});
+
+// ─── 16 ATOMIC UNITS REFERENCE ───
+const units=[
+  {n:'Skills',c:160,color:C.skill,icon:'⚡',desc:'Procedural knowledge for agents. Portable, activation-friendly instruction sets with SKILL.md entrypoints. Define how to do things — research, draft, evaluate, debug.',tags:['procedural','agent-ready','SKILL.md','unit.json']},
+  {n:'Recipes',c:118,color:C.recipe,icon:'🧪',desc:'Presets that bind schema + style + constraints. Ready-to-run configuration packages for consistent output. Not new schemas — packaging of existing ones.',tags:['preset','schema+style','RECIPE.json','constraints']},
+  {n:'Content Types',c:113,color:C.content_type,icon:'📄',desc:'Editor presets and publishing contracts. Define "what kind of asset is this?" — articles, qbank items, slide decks. Wire default recipe/style/channel expectations.',tags:['publishing','modalities','ops pipeline','CMS editor']},
+  {n:'Metrics',c:55,color:C.metric,icon:'📊',desc:'What gets measured. Define units, aggregation methods, and interpretation. Track content performance, A/B test outcomes, retention signals.',tags:['measurement','aggregation','dashboards','experiments']},
+  {n:'KB Items',c:54,color:C.kb,icon:'📚',desc:'Long-form reference context with no length limit. Domain expertise, best practices, and citeable reference packets. Three variants: snippet, distilled, full.',tags:['reference','context','KB.md','3 variants']},
+  {n:'Styles',c:48,color:C.style,icon:'🎨',desc:'Formatting overlays — tone, voice, and structure constraints that don\'t change schema shape. Give agents a stable "house style" to apply consistently.',tags:['tone/voice','overlays','constraints','non-schema']},
+  {n:'Tools',c:42,color:C.tool,icon:'🔧',desc:'Executable capabilities with explicit I/O contracts. External APIs, internal services, deterministic actions. Types: MCP, HTTP, internal, SDK, CLI.',tags:['executable','I/O contract','mcp/http/cli','auditable']},
+  {n:'Prompts',c:31,color:C.prompt,icon:'💬',desc:'Structured instruction contracts — system, task, format, policy, rubric prompts. Not one-liners. Must include objective, inputs, instructions, output format, guardrails.',tags:['instructions','reusable','structured','versioned']},
+  {n:'Channels',c:27,color:C.channel,icon:'📡',desc:'Delivery surface constraints. Platform-specific limits like max chars, carousel support, alt text requirements. Enforce output standards per surface.',tags:['delivery','platform limits','surface rules','output']},
+  {n:'Rubrics',c:25,color:C.rubric,icon:'✅',desc:'Evaluation criteria with scores, weights, and pass/fail thresholds. Evidence-first, composable. Power A/B tests, pairwise judging, and quality scoring.',tags:['evaluation','scoring','criteria','thresholds']},
+  {n:'Schemas',c:21,color:C.schema,icon:'🔷',desc:'Output shape contracts — the most fragile units requiring strongest testing. Enforce structured outputs, validate content type payloads. Tests mandatory.',tags:['JSON shape','validation','tests required','fragile']},
+  {n:'Playbooks',c:13,color:C.playbook,icon:'📋',desc:'Ordered multi-step patterns. Define recommended sequences of skills/tools. Three modes: strict (required order), guided (suggested), adaptive (weighted hints).',tags:['multi-step','sequenced','3 modes','workflow']},
+  {n:'Bundles',c:11,color:C.bundle,icon:'📦',desc:'Curated collections of units without imposed order. Starter kits, context bundles, grouped skills/KB/tools for discovery. Membership via entity_links.',tags:['collection','unordered','starter kits','grouping']},
+  {n:'Lint Rules',c:8,color:C.lint_rule,icon:'🔍',desc:'Machine-checkable validations for readability, structure, brand compliance. Power "readiness strips" and ambient validation in preview/render surfaces.',tags:['validation','automated','quality gates','severity']},
+  {n:'Agents',c:6,color:C.agent,icon:'🤖',desc:'Personas + preferences, not capabilities. Reusable voice/role profiles with model defaults, temperature settings, and proclivities (prefer/avoid patterns).',tags:['persona','voice/role','proclivities','defaults']},
+  {n:'Lint Rulesets',c:3,color:C.lint_ruleset,icon:'📏',desc:'Ordered collections of lint rules grouped for a surface. Define "run lint" actions for blog publishing, CMS content, etc. Membership via lint_ruleset_rules.',tags:['rule groups','ordered','surface-scoped','sequence']}
+];
+const ugEl=document.getElementById('unitsGrid');
+units.forEach(u=>{
+  const d=document.createElement('div');d.className='unit-card';
+  d.innerHTML=`<div class="uc-top"><div class="uc-icon" style="background:${u.color}22;color:${u.color}">${u.icon}</div><div class="uc-name">${u.n}</div><div class="uc-count">${u.c}</div></div><div class="uc-desc">${u.desc}</div><div class="uc-meta">${u.tags.map(t=>`<span class="uc-tag">${t}</span>`).join('')}</div>`;
+  ugEl.appendChild(d);
 });
 
 // ─── ARCHITECTURE ───
