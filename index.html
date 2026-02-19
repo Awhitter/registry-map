@@ -1,382 +1,419 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Catalyst Registry Map</title>
+<title>Catalyst AI Registry — Mission Control</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0f; color: #e0e0e0; overflow-x: hidden; }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',system-ui,sans-serif; background:#09090b; color:#e4e4e7; min-height:100vh; }
   
-  .header { padding: 32px 40px 16px; border-bottom: 1px solid #1a1a2e; }
-  .header h1 { font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 4px; }
-  .header p { color: #888; font-size: 14px; }
-  .stats-bar { display: flex; gap: 32px; margin-top: 16px; flex-wrap: wrap; }
-  .stat { text-align: center; }
-  .stat .num { font-size: 32px; font-weight: 800; background: linear-gradient(135deg, #6366f1, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .stat .label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+  /* Header */
+  .header { padding:32px 32px 24px; background:linear-gradient(180deg,#18181b 0%,#09090b 100%); border-bottom:1px solid #27272a; }
+  .header-top { display:flex; align-items:center; gap:16px; margin-bottom:24px; }
+  .logo { width:44px; height:44px; background:linear-gradient(135deg,#38bdf8,#818cf8); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; }
+  .header h1 { font-size:26px; font-weight:800; background:linear-gradient(135deg,#f4f4f5,#71717a); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .header .sub { font-size:13px; color:#71717a; margin-top:2px; }
+  
+  /* Stats Grid */
+  .stats { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; }
+  @media(max-width:900px) { .stats { grid-template-columns:repeat(3,1fr); } }
+  @media(max-width:500px) { .stats { grid-template-columns:repeat(2,1fr); } }
+  .stat-card { background:#18181b; border:1px solid #27272a; border-radius:10px; padding:16px; transition:border-color .2s; }
+  .stat-card:hover { border-color:#3f3f46; }
+  .stat-card .val { font-size:28px; font-weight:800; color:#f4f4f5; }
+  .stat-card .lbl { font-size:11px; color:#71717a; text-transform:uppercase; letter-spacing:.5px; margin-top:2px; }
+  .stat-accent { color:#38bdf8; }
 
-  .main { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 24px 40px; }
-  @media (max-width: 900px) { .main { grid-template-columns: 1fr; } }
+  /* Main Grid */
+  .main { padding:24px 32px; display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media(max-width:900px) { .main { grid-template-columns:1fr; } }
+  .card { background:#18181b; border:1px solid #27272a; border-radius:12px; overflow:hidden; }
+  .card-head { padding:16px 20px 12px; display:flex; align-items:center; gap:8px; border-bottom:1px solid #27272a; }
+  .card-head h2 { font-size:14px; font-weight:600; color:#a1a1aa; }
+  .card-head .dot { width:8px; height:8px; border-radius:50%; }
+  .card-body { padding:20px; }
+  .full { grid-column:1/-1; }
 
-  .card { background: #111118; border: 1px solid #1e1e2e; border-radius: 12px; padding: 24px; }
-  .card h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #ccc; }
-  .card.full { grid-column: 1 / -1; }
+  /* Entity Bars */
+  .ebar { display:flex; align-items:center; margin-bottom:6px; }
+  .ebar-name { width:100px; font-size:12px; color:#a1a1aa; text-align:right; padding-right:12px; flex-shrink:0; }
+  .ebar-track { flex:1; height:26px; background:#27272a; border-radius:6px; overflow:hidden; position:relative; }
+  .ebar-fill { height:100%; border-radius:6px; display:flex; align-items:center; padding-left:10px; font-size:11px; font-weight:700; color:#fff; transition:width 1s cubic-bezier(.4,0,.2,1); }
+  .ebar-track:hover .ebar-fill { filter:brightness(1.15); }
 
-  /* Entity Type Bars */
-  .bar-row { display: flex; align-items: center; margin-bottom: 8px; }
-  .bar-label { width: 110px; font-size: 13px; color: #aaa; text-align: right; padding-right: 12px; flex-shrink: 0; }
-  .bar-track { flex: 1; height: 28px; background: #1a1a2e; border-radius: 6px; overflow: hidden; position: relative; cursor: pointer; }
-  .bar-fill { height: 100%; border-radius: 6px; transition: width 0.8s ease; display: flex; align-items: center; padding-left: 10px; font-size: 12px; font-weight: 600; color: #fff; min-width: 30px; }
-  .bar-track:hover .bar-fill { filter: brightness(1.2); }
+  /* Connection Flow */
+  .flow-svg { width:100%; height:auto; }
+  .flow-svg text { font-family:'Inter',sans-serif; }
 
-  /* Colors per type */
-  .t-skill .bar-fill { background: linear-gradient(90deg, #6366f1, #818cf8); }
-  .t-recipe .bar-fill { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-  .t-content_type .bar-fill { background: linear-gradient(90deg, #10b981, #34d399); }
-  .t-metric .bar-fill { background: linear-gradient(90deg, #ef4444, #f87171); }
-  .t-kb .bar-fill { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
-  .t-style .bar-fill { background: linear-gradient(90deg, #ec4899, #f472b6); }
-  .t-tool .bar-fill { background: linear-gradient(90deg, #f97316, #fb923c); }
-  .t-prompt .bar-fill { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
-  .t-channel .bar-fill { background: linear-gradient(90deg, #14b8a6, #2dd4bf); }
-  .t-rubric .bar-fill { background: linear-gradient(90deg, #e11d48, #fb7185); }
-  .t-schema .bar-fill { background: linear-gradient(90deg, #0ea5e9, #38bdf8); }
-  .t-playbook .bar-fill { background: linear-gradient(90deg, #84cc16, #a3e635); }
-  .t-bundle .bar-fill { background: linear-gradient(90deg, #d946ef, #e879f9); }
-  .t-lint_rule .bar-fill { background: linear-gradient(90deg, #78716c, #a8a29e); }
-  .t-agent .bar-fill { background: linear-gradient(90deg, #facc15, #fde047); }
-  .t-lint_ruleset .bar-fill { background: linear-gradient(90deg, #64748b, #94a3b8); }
+  /* Tag Heatmap */
+  .tag-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  @media(max-width:600px) { .tag-grid { grid-template-columns:repeat(2,1fr); } }
+  .tag-cell { padding:10px 8px; border-radius:8px; text-align:center; transition:transform .15s; cursor:default; }
+  .tag-cell:hover { transform:scale(1.05); }
+  .tag-cell .tn { font-size:12px; font-weight:600; color:#e4e4e7; }
+  .tag-cell .tv { font-size:11px; color:#a1a1aa; margin-top:2px; }
 
-  /* Link Graph */
-  .link-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .link-table th { text-align: left; color: #666; font-weight: 500; padding: 6px 8px; border-bottom: 1px solid #1e1e2e; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .link-table td { padding: 6px 8px; border-bottom: 1px solid #141420; }
-  .link-table tr:hover { background: #1a1a2e; }
-  .link-type-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-  .lt-requires { background: #ef444420; color: #f87171; }
-  .lt-recommends { background: #3b82f620; color: #60a5fa; }
-  .lt-related { background: #64748b20; color: #94a3b8; }
-  .lt-uses_tool { background: #f9731620; color: #fb923c; }
-  .lt-uses_prompt { background: #8b5cf620; color: #a78bfa; }
-  .lt-bundle_member { background: #d946ef20; color: #e879f9; }
-  .lt-uses_kb { background: #3b82f620; color: #93c5fd; }
-  .lt-alternate { background: #78716c20; color: #a8a29e; }
-  .lt-pairs_with { background: #ec489920; color: #f472b6; }
-  .lt-often_follows { background: #84cc1620; color: #a3e635; }
-  .lt-prerequisite { background: #ef444440; color: #fca5a5; }
-  .lt-parent { background: #14b8a620; color: #5eead4; }
+  /* Artifact Donut */
+  .artifact-row { display:flex; align-items:center; gap:24px; }
+  .donut-wrap { position:relative; width:140px; height:140px; flex-shrink:0; }
+  .donut-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .donut-center .pct { font-size:24px; font-weight:800; color:#f4f4f5; }
+  .donut-center .plbl { font-size:10px; color:#71717a; }
+  .art-list { display:grid; grid-template-columns:1fr 1fr; gap:4px 16px; font-size:12px; }
+  .art-list .ai { display:flex; align-items:center; gap:6px; }
+  .art-list .adot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
 
-  /* Sankey-style flow */
-  .flow-section { padding: 24px 40px; }
-  .flow-section h2 { font-size: 16px; color: #ccc; margin-bottom: 16px; }
-  svg text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  /* App Treemap */
+  .tree-row { display:flex; gap:4px; height:200px; }
+  .tree-block { border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:filter .2s; cursor:default; }
+  .tree-block:hover { filter:brightness(1.15); }
+  .tree-block .tb-name { font-size:11px; font-weight:700; color:#fff; }
+  .tree-block .tb-val { font-size:10px; color:rgba(255,255,255,.7); }
 
-  /* KB Quality */
-  .quality-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
-  .quality-label { width: 80px; font-size: 13px; color: #aaa; }
-  .quality-bar { flex: 1; display: flex; height: 24px; border-radius: 6px; overflow: hidden; }
-  .q-rich { background: #10b981; }
-  .q-medium { background: #f59e0b; }
-  .q-thin { background: #ef4444; }
-  .quality-bar span { display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #fff; min-width: 20px; }
+  /* Architecture */
+  .arch-layers { display:flex; flex-direction:column; gap:12px; }
+  .arch-row { display:flex; gap:12px; }
+  @media(max-width:600px) { .arch-row { flex-direction:column; } }
+  .arch-layer { flex:1; background:#0f0f12; border:1px solid #27272a; border-radius:10px; padding:16px; }
+  .arch-layer h3 { font-size:13px; font-weight:700; margin-bottom:10px; padding-bottom:8px; }
+  .arch-pills { display:flex; flex-wrap:wrap; gap:6px; }
+  .arch-pill { font-size:11px; font-weight:600; padding:4px 10px; border-radius:20px; color:#09090b; }
+  .arch-arrow { text-align:center; color:#3f3f46; font-size:20px; padding:4px 0; }
 
-  /* Donut */
-  .donut-container { display: flex; align-items: center; gap: 24px; }
-  .donut-legend { font-size: 13px; }
-  .donut-legend div { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-  .donut-legend .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-
-  /* Connection Map */
-  .conn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-  @media (max-width: 600px) { .conn-grid { grid-template-columns: repeat(2, 1fr); } }
-  .conn-node { background: #1a1a2e; border-radius: 8px; padding: 12px; text-align: center; position: relative; }
-  .conn-node .type-name { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
-  .conn-node .conn-count { font-size: 20px; font-weight: 800; }
-  .conn-node .conn-detail { font-size: 10px; color: #666; margin-top: 2px; }
-
-  /* Health Score */
-  .health-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-  .health-item { background: #1a1a2e; border-radius: 8px; padding: 16px; text-align: center; }
-  .health-item .score { font-size: 36px; font-weight: 800; }
-  .health-item .hlabel { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
-  .score-green { color: #10b981; }
-  .score-yellow { color: #f59e0b; }
-  .score-red { color: #ef4444; }
-
-  .section-gap { height: 8px; }
+  /* Link table */
+  .ltable { width:100%; border-collapse:collapse; font-size:12px; }
+  .ltable th { text-align:left; color:#71717a; font-size:10px; text-transform:uppercase; letter-spacing:.5px; padding:6px 8px; border-bottom:1px solid #27272a; }
+  .ltable td { padding:6px 8px; border-bottom:1px solid #1a1a1f; }
+  .ltable tr:hover { background:#1a1a1f; }
+  .lbadge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:600; }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>Catalyst Registry Map</h1>
-  <p>Live snapshot of the Katailyst atomic unit registry — Feb 19, 2026</p>
-  <div class="stats-bar">
-    <div class="stat"><div class="num">735</div><div class="label">Total Entities</div></div>
-    <div class="stat"><div class="num">16</div><div class="label">Unit Types</div></div>
-    <div class="stat"><div class="num">2,425</div><div class="label">Entity Links</div></div>
-    <div class="stat"><div class="num">208</div><div class="label">Apps</div></div>
-    <div class="stat"><div class="num">162</div><div class="label">KB Variants</div></div>
-    <div class="stat"><div class="num">98.5%</div><div class="label">Published</div></div>
+  <div class="header-top">
+    <div class="logo">⚡</div>
+    <div>
+      <h1>Catalyst AI Registry</h1>
+      <div class="sub">Mission Control Dashboard — Live Data · Feb 19, 2026</div>
+    </div>
   </div>
+  <div class="stats" id="stats"></div>
 </div>
 
 <div class="main">
-
   <!-- Entity Distribution -->
   <div class="card">
-    <h2>Entity Distribution by Type</h2>
-    <div class="bar-row t-skill"><div class="bar-label">Skills</div><div class="bar-track"><div class="bar-fill" style="width:100%">160</div></div></div>
-    <div class="bar-row t-recipe"><div class="bar-label">Recipes</div><div class="bar-track"><div class="bar-fill" style="width:73.8%">118</div></div></div>
-    <div class="bar-row t-content_type"><div class="bar-label">Content Types</div><div class="bar-track"><div class="bar-fill" style="width:70.6%">113</div></div></div>
-    <div class="bar-row t-metric"><div class="bar-label">Metrics</div><div class="bar-track"><div class="bar-fill" style="width:34.4%">55</div></div></div>
-    <div class="bar-row t-kb"><div class="bar-label">KB Items</div><div class="bar-track"><div class="bar-fill" style="width:33.8%">54</div></div></div>
-    <div class="bar-row t-style"><div class="bar-label">Styles</div><div class="bar-track"><div class="bar-fill" style="width:30%">48</div></div></div>
-    <div class="bar-row t-tool"><div class="bar-label">Tools</div><div class="bar-track"><div class="bar-fill" style="width:26.3%">42</div></div></div>
-    <div class="bar-row t-prompt"><div class="bar-label">Prompts</div><div class="bar-track"><div class="bar-fill" style="width:19.4%">31</div></div></div>
-    <div class="bar-row t-channel"><div class="bar-label">Channels</div><div class="bar-track"><div class="bar-fill" style="width:16.9%">27</div></div></div>
-    <div class="bar-row t-rubric"><div class="bar-label">Rubrics</div><div class="bar-track"><div class="bar-fill" style="width:15.6%">25</div></div></div>
-    <div class="bar-row t-schema"><div class="bar-label">Schemas</div><div class="bar-track"><div class="bar-fill" style="width:13.1%">21</div></div></div>
-    <div class="bar-row t-playbook"><div class="bar-label">Playbooks</div><div class="bar-track"><div class="bar-fill" style="width:8.1%">13</div></div></div>
-    <div class="bar-row t-bundle"><div class="bar-label">Bundles</div><div class="bar-track"><div class="bar-fill" style="width:6.9%">11</div></div></div>
-    <div class="bar-row t-lint_rule"><div class="bar-label">Lint Rules</div><div class="bar-track"><div class="bar-fill" style="width:5%">8</div></div></div>
-    <div class="bar-row t-agent"><div class="bar-label">Agents</div><div class="bar-track"><div class="bar-fill" style="width:3.8%">6</div></div></div>
-    <div class="bar-row t-lint_ruleset"><div class="bar-label">Lint Rulesets</div><div class="bar-track"><div class="bar-fill" style="width:1.9%">3</div></div></div>
+    <div class="card-head"><div class="dot" style="background:#38bdf8"></div><h2>Entity Distribution</h2></div>
+    <div class="card-body" id="entity-bars"></div>
   </div>
 
-  <!-- Link Distribution -->
+  <!-- Link Types -->
   <div class="card">
-    <h2>Entity Link Graph (2,425 total)</h2>
-    <table class="link-table">
-      <thead><tr><th>Link Type</th><th>Count</th><th>Share</th></tr></thead>
-      <tbody>
-        <tr><td><span class="link-type-badge lt-requires">requires</span></td><td>714</td><td>29.4%</td></tr>
-        <tr><td><span class="link-type-badge lt-recommends">recommends</span></td><td>555</td><td>22.9%</td></tr>
-        <tr><td><span class="link-type-badge lt-related">related</span></td><td>506</td><td>20.9%</td></tr>
-        <tr><td><span class="link-type-badge lt-uses_tool">uses_tool</span></td><td>210</td><td>8.7%</td></tr>
-        <tr><td><span class="link-type-badge lt-uses_prompt">uses_prompt</span></td><td>125</td><td>5.2%</td></tr>
-        <tr><td><span class="link-type-badge lt-bundle_member">bundle_member</span></td><td>107</td><td>4.4%</td></tr>
-        <tr><td><span class="link-type-badge lt-uses_kb">uses_kb</span></td><td>70</td><td>2.9%</td></tr>
-        <tr><td><span class="link-type-badge lt-alternate">alternate</span></td><td>67</td><td>2.8%</td></tr>
-        <tr><td><span class="link-type-badge lt-pairs_with">pairs_with</span></td><td>59</td><td>2.4%</td></tr>
-        <tr><td><span class="link-type-badge lt-often_follows">often_follows</span></td><td>9</td><td>0.4%</td></tr>
-        <tr><td><span class="link-type-badge lt-prerequisite">prerequisite</span></td><td>2</td><td>0.1%</td></tr>
-        <tr><td><span class="link-type-badge lt-parent">parent</span></td><td>1</td><td>0.04%</td></tr>
-      </tbody>
-    </table>
+    <div class="card-head"><div class="dot" style="background:#4ade80"></div><h2>Link Graph · 2,425 connections</h2></div>
+    <div class="card-body">
+      <table class="ltable" id="link-table"></table>
+    </div>
   </div>
 
-  <!-- KB Quality -->
-  <div class="card">
-    <h2>KB Item Quality (54 items, 162 variants)</h2>
-    <p style="font-size:12px; color:#666; margin-bottom:12px;">Rich = >500 chars | Medium = 50-500 chars | Thin = <50 chars</p>
-    <div class="quality-row">
-      <div class="quality-label">Snippet</div>
-      <div class="quality-bar">
-        <span class="q-rich" style="flex:24">24</span>
-        <span class="q-medium" style="flex:30">30</span>
-      </div>
-    </div>
-    <div class="quality-row">
-      <div class="quality-label">Distilled</div>
-      <div class="quality-bar">
-        <span class="q-rich" style="flex:53">53</span>
-        <span class="q-thin" style="flex:1">1</span>
-      </div>
-    </div>
-    <div class="quality-row">
-      <div class="quality-label">Full</div>
-      <div class="quality-bar">
-        <span class="q-rich" style="flex:53">53</span>
-        <span class="q-thin" style="flex:1">1</span>
-      </div>
-    </div>
-    <p style="font-size:12px; color:#10b981; margin-top:12px;">KB variants are actually in good shape — 98% have rich full variants</p>
-  </div>
-
-  <!-- Health Scores -->
-  <div class="card">
-    <h2>Registry Health Scorecard</h2>
-    <div class="health-grid">
-      <div class="health-item"><div class="score score-green">A</div><div class="hlabel">Schema Design</div></div>
-      <div class="health-item"><div class="score score-green">A</div><div class="hlabel">Taxonomy</div></div>
-      <div class="health-item"><div class="score score-green">A-</div><div class="hlabel">KB Quality</div></div>
-      <div class="health-item"><div class="score score-green">A-</div><div class="hlabel">Link Graph</div></div>
-      <div class="health-item"><div class="score score-red">F</div><div class="hlabel">Artifacts</div></div>
-      <div class="health-item"><div class="score score-yellow">B-</div><div class="hlabel">Playbooks</div></div>
-    </div>
-    <p style="font-size:12px; color:#888; margin-top:12px;">
-      Link graph updated: 2,425 links across 735 entities (avg 3.3 links/entity). 
-      Previous audit said 2 links — that was wrong (only queried uses_kb). 
-      Artifacts table is literally 0 rows — all artifact data lives in entity_revisions.artifacts_json.
-    </p>
-  </div>
-
-  <!-- Cross-Type Connection Map -->
+  <!-- Connection Flow -->
   <div class="card full">
-    <h2>How Entity Types Connect (Top Cross-Type Links)</h2>
-    <svg viewBox="0 0 900 420" style="width:100%; height:auto;">
-      <!-- Node circles -->
-      <!-- Row 1: Content pipeline -->
-      <circle cx="100" cy="80" r="35" fill="#6366f1" opacity="0.8"/>
-      <text x="100" y="76" text-anchor="middle" fill="white" font-size="11" font-weight="700">Skills</text>
-      <text x="100" y="90" text-anchor="middle" fill="white" font-size="10">160</text>
-
-      <circle cx="280" cy="80" r="30" fill="#10b981" opacity="0.8"/>
-      <text x="280" y="76" text-anchor="middle" fill="white" font-size="10" font-weight="700">Content</text>
-      <text x="280" y="89" text-anchor="middle" fill="white" font-size="10">Types 113</text>
-
-      <circle cx="450" cy="80" r="30" fill="#f59e0b" opacity="0.8"/>
-      <text x="450" y="76" text-anchor="middle" fill="white" font-size="11" font-weight="700">Recipes</text>
-      <text x="450" y="90" text-anchor="middle" fill="white" font-size="10">118</text>
-
-      <circle cx="620" cy="80" r="22" fill="#0ea5e9" opacity="0.8"/>
-      <text x="620" y="76" text-anchor="middle" fill="white" font-size="10" font-weight="700">Schemas</text>
-      <text x="620" y="89" text-anchor="middle" fill="white" font-size="10">21</text>
-
-      <circle cx="770" cy="80" r="20" fill="#84cc16" opacity="0.8"/>
-      <text x="770" y="76" text-anchor="middle" fill="white" font-size="10" font-weight="700">Play-</text>
-      <text x="770" y="89" text-anchor="middle" fill="white" font-size="10">books 13</text>
-
-      <!-- Row 2: Support layer -->
-      <circle cx="100" cy="220" r="24" fill="#3b82f6" opacity="0.8"/>
-      <text x="100" y="216" text-anchor="middle" fill="white" font-size="11" font-weight="700">KB</text>
-      <text x="100" y="229" text-anchor="middle" fill="white" font-size="10">54</text>
-
-      <circle cx="250" cy="220" r="22" fill="#f97316" opacity="0.8"/>
-      <text x="250" y="216" text-anchor="middle" fill="white" font-size="11" font-weight="700">Tools</text>
-      <text x="250" y="229" text-anchor="middle" fill="white" font-size="10">42</text>
-
-      <circle cx="390" cy="220" r="20" fill="#8b5cf6" opacity="0.8"/>
-      <text x="390" y="216" text-anchor="middle" fill="white" font-size="10" font-weight="700">Prompts</text>
-      <text x="390" y="229" text-anchor="middle" fill="white" font-size="10">31</text>
-
-      <circle cx="520" cy="220" r="22" fill="#ec4899" opacity="0.8"/>
-      <text x="520" y="216" text-anchor="middle" fill="white" font-size="11" font-weight="700">Styles</text>
-      <text x="520" y="229" text-anchor="middle" fill="white" font-size="10">48</text>
-
-      <circle cx="650" cy="220" r="20" fill="#14b8a6" opacity="0.8"/>
-      <text x="650" y="216" text-anchor="middle" fill="white" font-size="10" font-weight="700">Channels</text>
-      <text x="650" y="229" text-anchor="middle" fill="white" font-size="10">27</text>
-
-      <circle cx="780" cy="220" r="20" fill="#d946ef" opacity="0.8"/>
-      <text x="780" y="216" text-anchor="middle" fill="white" font-size="10" font-weight="700">Bundles</text>
-      <text x="780" y="229" text-anchor="middle" fill="white" font-size="10">11</text>
-
-      <!-- Row 3: Eval layer -->
-      <circle cx="200" cy="360" r="22" fill="#ef4444" opacity="0.8"/>
-      <text x="200" y="356" text-anchor="middle" fill="white" font-size="10" font-weight="700">Metrics</text>
-      <text x="200" y="369" text-anchor="middle" fill="white" font-size="10">55</text>
-
-      <circle cx="370" cy="360" r="20" fill="#e11d48" opacity="0.8"/>
-      <text x="370" y="356" text-anchor="middle" fill="white" font-size="10" font-weight="700">Rubrics</text>
-      <text x="370" y="369" text-anchor="middle" fill="white" font-size="10">25</text>
-
-      <circle cx="530" cy="360" r="16" fill="#78716c" opacity="0.8"/>
-      <text x="530" y="356" text-anchor="middle" fill="white" font-size="9" font-weight="700">Lint</text>
-      <text x="530" y="367" text-anchor="middle" fill="white" font-size="9">Rules 8</text>
-
-      <circle cx="670" cy="360" r="16" fill="#facc15" opacity="0.8"/>
-      <text x="670" y="356" text-anchor="middle" fill="black" font-size="10" font-weight="700">Agents</text>
-      <text x="670" y="369" text-anchor="middle" fill="black" font-size="10">6</text>
-
-      <!-- Connection lines (top links) -->
-      <!-- Skills → KB (uses_kb: 68) -->
-      <line x1="100" y1="115" x2="100" y2="196" stroke="#3b82f6" stroke-width="3" opacity="0.4"/>
-      <!-- Skills → Tools (uses_tool: 82) -->
-      <line x1="130" y1="105" x2="230" y2="200" stroke="#f97316" stroke-width="3.5" opacity="0.4"/>
-      <!-- Skills → Skills (related: 96) -->
-      <path d="M 65 80 C 30 80, 30 80, 65 85" stroke="#6366f1" stroke-width="3" opacity="0.3" fill="none"/>
-      <!-- Content Types → Recipes (requires: 113) -->
-      <line x1="310" y1="80" x2="420" y2="80" stroke="#ef4444" stroke-width="5" opacity="0.4"/>
-      <!-- Content Types → Tools (uses_tool: 113) -->
-      <line x1="265" y1="108" x2="250" y2="198" stroke="#f97316" stroke-width="5" opacity="0.3"/>
-      <!-- Content Types → Prompts (uses_prompt: 113) -->
-      <line x1="300" y1="108" x2="380" y2="200" stroke="#8b5cf6" stroke-width="5" opacity="0.3"/>
-      <!-- Content Types → Rubrics (recommends: 113) -->
-      <line x1="280" y1="110" x2="370" y2="340" stroke="#e11d48" stroke-width="4" opacity="0.2"/>
-      <!-- Content Types → Metrics (recommends: 113) -->
-      <line x1="265" y1="110" x2="200" y2="338" stroke="#ef4444" stroke-width="4" opacity="0.2"/>
-      <!-- Content Types → Styles (requires: 113) -->
-      <line x1="305" y1="105" x2="505" y2="205" stroke="#ec4899" stroke-width="4" opacity="0.3"/>
-      <!-- Content Types → Channels (requires: 113) -->
-      <line x1="310" y1="95" x2="635" y2="205" stroke="#14b8a6" stroke-width="4" opacity="0.2"/>
-      <!-- Recipes → Schemas (requires: 118) -->
-      <line x1="480" y1="80" x2="598" y2="80" stroke="#ef4444" stroke-width="5" opacity="0.4"/>
-      <!-- Recipes → Styles (requires: 118) -->
-      <line x1="450" y1="110" x2="520" y2="198" stroke="#ec4899" stroke-width="5" opacity="0.3"/>
-      <!-- Recipes → Channels (requires: 118) -->
-      <line x1="470" y1="105" x2="640" y2="200" stroke="#14b8a6" stroke-width="5" opacity="0.3"/>
-      <!-- Metrics → Rubrics (recommends: 76) -->
-      <line x1="222" y1="360" x2="350" y2="360" stroke="#e11d48" stroke-width="3" opacity="0.4"/>
-      <!-- Playbooks → Bundles (bundle_member: 30) -->
-      <line x1="770" y1="100" x2="780" y2="200" stroke="#d946ef" stroke-width="2" opacity="0.4"/>
-
-      <!-- Layer labels -->
-      <text x="850" y="80" fill="#444" font-size="11" font-weight="600" text-anchor="end">CONTENT</text>
-      <text x="850" y="95" fill="#444" font-size="11" text-anchor="end">PIPELINE</text>
-      <text x="850" y="220" fill="#444" font-size="11" font-weight="600" text-anchor="end">SUPPORT</text>
-      <text x="850" y="235" fill="#444" font-size="11" text-anchor="end">LAYER</text>
-      <text x="850" y="360" fill="#444" font-size="11" font-weight="600" text-anchor="end">EVAL</text>
-      <text x="850" y="375" fill="#444" font-size="11" text-anchor="end">LAYER</text>
-    </svg>
-    <p style="font-size:11px; color:#666; margin-top:8px;">
-      Line thickness = link count. Content Types are the most connected node (linked to every other layer). 
-      The pipeline flows: Content Type → Recipe → Schema/Style/Channel. Skills and KB feed in from the support layer.
-      Rubrics and Metrics evaluate outputs.
-    </p>
+    <div class="card-head"><div class="dot" style="background:#fbbf24"></div><h2>Cross-Type Connections — How Entity Types Wire Together</h2></div>
+    <div class="card-body" id="flow-container"></div>
   </div>
 
-</div>
-
-<div style="padding: 24px 40px;">
+  <!-- Tag Coverage -->
   <div class="card">
-    <h2>System Architecture — How It All Fits Together</h2>
-    <pre style="font-size:12px; line-height:1.6; color:#aaa; overflow-x:auto;">
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           CATALYST REGISTRY (Supabase)                         │
-│                                735 entities                                     │
-│                                                                                 │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
-│  │  CONTENT      │  │  SUPPORT     │  │  EVALUATION  │  │  EXECUTION   │       │
-│  │  PIPELINE     │  │  LAYER       │  │  LAYER       │  │  LAYER       │       │
-│  │               │  │              │  │              │  │              │       │
-│  │ Content Types │  │ KB Items     │  │ Rubrics      │  │ Playbooks    │       │
-│  │ Recipes       │  │ Tools        │  │ Metrics      │  │ Bundles      │       │
-│  │ Schemas       │  │ Prompts      │  │ Lint Rules   │  │ Agents       │       │
-│  │ Styles        │  │ Skills       │  │ Lint Rulesets │  │ Automations  │       │
-│  │ Channels      │  │              │  │ Evaluations  │  │ Runs         │       │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘       │
-│         │                  │                  │                  │               │
-│         └──────────────────┴──────────────────┴──────────────────┘               │
-│                              entity_links (2,425)                               │
-│                              entity_tags (taxonomy)                             │
-│                              entity_revisions (versioning)                      │
-│                              entity_embeddings (vector search)                  │
-└─────────────────────────────────────────────────────────────────────────────────┘
-         │                                                     │
-         ▼                                                     ▼
-┌─────────────────┐                                 ┌─────────────────┐
-│  CONTENT SYSTEM │                                 │  RUNTIME SYSTEM │
-│                 │                                 │                 │
-│ Assets          │                                 │ Runs            │
-│ Asset Versions  │                                 │ Run Steps       │
-│ Campaigns       │                                 │ Run Tool Calls  │
-│ Calendar Items  │                                 │ Run Outputs     │
-│ Publish Events  │                                 │ Run Costs       │
-│ Editorial Tasks │                                 │ Automations     │
-└─────────────────┘                                 └─────────────────┘
-         │                                                     │
-         ▼                                                     ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              DISCOVERY SYSTEM                                   │
-│  discover() → ranked menus | traverse_links() → graph walk                     │
-│  Weighted scoring: semantic + tags + links + tier + rating + eval + recency     │
-└─────────────────────────────────────────────────────────────────────────────────┘
-    </pre>
+    <div class="card-head"><div class="dot" style="background:#c084fc"></div><h2>Tag Namespace Coverage</h2></div>
+    <div class="card-body"><div class="tag-grid" id="tag-grid"></div></div>
+  </div>
+
+  <!-- Artifact Health -->
+  <div class="card">
+    <div class="card-head"><div class="dot" style="background:#2dd4bf"></div><h2>Artifact Health · 52.5% coverage</h2></div>
+    <div class="card-body">
+      <div class="artifact-row">
+        <div class="donut-wrap"><canvas id="donut-chart"></canvas><div class="donut-center"><div class="pct">52.5%</div><div class="plbl">with artifacts</div></div></div>
+        <div class="art-list" id="art-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Portfolio -->
+  <div class="card">
+    <div class="card-head"><div class="dot" style="background:#f59e0b"></div><h2>App Portfolio · 208 apps across 4 tiers</h2></div>
+    <div class="card-body"><div class="tree-row" id="treemap"></div></div>
+  </div>
+
+  <!-- Architecture -->
+  <div class="card full">
+    <div class="card-head"><div class="dot" style="background:#f472b6"></div><h2>System Architecture — 4 Layers</h2></div>
+    <div class="card-body" id="architecture"></div>
   </div>
 </div>
+
+<script>
+// ─── DATA ───
+const C = {
+  skill:'#38bdf8', recipe:'#4ade80', content_type:'#fbbf24', metric:'#c084fc',
+  kb:'#f87171', style:'#a78bfa', tool:'#fb923c', prompt:'#f472b6',
+  channel:'#60a5fa', rubric:'#a3e635', schema:'#34d399', playbook:'#2dd4bf',
+  bundle:'#67e8f9', lint_rule:'#e879f9', agent:'#818cf8', lint_ruleset:'#eab308'
+};
+
+const entities = [
+  {n:'Skills',v:160,c:C.skill},{n:'Recipes',v:118,c:C.recipe},{n:'Content Types',v:113,c:C.content_type},
+  {n:'Metrics',v:55,c:C.metric},{n:'KB Items',v:54,c:C.kb},{n:'Styles',v:48,c:C.style},
+  {n:'Tools',v:42,c:C.tool},{n:'Prompts',v:31,c:C.prompt},{n:'Channels',v:27,c:C.channel},
+  {n:'Rubrics',v:25,c:C.rubric},{n:'Schemas',v:21,c:C.schema},{n:'Playbooks',v:13,c:C.playbook},
+  {n:'Bundles',v:11,c:C.bundle},{n:'Lint Rules',v:8,c:C.lint_rule},{n:'Agents',v:6,c:C.agent},
+  {n:'Lint Rulesets',v:3,c:C.lint_ruleset}
+];
+
+const links = [
+  {type:'requires',cnt:714,clr:'#ef4444'},{type:'recommends',cnt:555,clr:'#3b82f6'},
+  {type:'related',cnt:506,clr:'#6b7280'},{type:'uses_tool',cnt:210,clr:'#fb923c'},
+  {type:'uses_prompt',cnt:125,clr:'#a78bfa'},{type:'bundle_member',cnt:107,clr:'#d946ef'},
+  {type:'uses_kb',cnt:70,clr:'#60a5fa'},{type:'alternate',cnt:67,clr:'#78716c'},
+  {type:'pairs_with',cnt:59,clr:'#ec4899'},{type:'often_follows',cnt:9,clr:'#84cc16'},
+  {type:'prerequisite',cnt:2,clr:'#fca5a5'},{type:'parent',cnt:1,clr:'#5eead4'}
+];
+
+const tags = [
+  {n:'scope',v:733},{n:'status',v:732},{n:'modality',v:473},{n:'format',v:426},
+  {n:'channel',v:248},{n:'source',v:232},{n:'domain',v:227},{n:'action',v:175},
+  {n:'family',v:115},{n:'stage',v:103},{n:'surface',v:78},{n:'partner',v:65},
+  {n:'tool_type',v:52},{n:'provider',v:46},{n:'dept',v:16},{n:'persona_role',v:6}
+];
+
+const artifacts = [
+  {n:'Skills',v:271,c:C.skill},{n:'Recipes',v:118,c:C.recipe},{n:'Content Types',v:113,c:C.content_type},
+  {n:'Metrics',v:59,c:C.metric},{n:'KB Items',v:54,c:C.kb},{n:'Styles',v:48,c:C.style},
+  {n:'Tools',v:39,c:C.tool},{n:'Prompts',v:31,c:C.prompt},{n:'Channels',v:30,c:C.channel},
+  {n:'Rubrics',v:25,c:C.rubric}
+];
+
+const apps = [{n:'Tier 1',v:5,c:'#38bdf8'},{n:'Tier 2',v:8,c:'#818cf8'},{n:'Tier 3',v:8,c:'#c084fc'},{n:'Tier 4',v:2,c:'#f472b6'},{n:'Untiered',v:185,c:'#52525b'}];
+
+// ─── ANIMATED COUNTER ───
+function animateValue(el, end, dur=1500) {
+  let start=0, startTime=null;
+  function step(ts) {
+    if(!startTime) startTime=ts;
+    const p=Math.min((ts-startTime)/dur,1);
+    el.textContent=Math.floor(p*end).toLocaleString();
+    if(p<1) requestAnimationFrame(step);
+    else el.textContent=end.toLocaleString();
+  }
+  requestAnimationFrame(step);
+}
+
+// ─── STATS ───
+const statsData = [{l:'Total Entities',v:735,a:true},{l:'Entity Types',v:16},{l:'Total Links',v:2425,a:true},{l:'Connected Apps',v:208},{l:'Revisions',v:1620},{l:'With Artifacts',v:850}];
+const statsEl = document.getElementById('stats');
+statsData.forEach(s => {
+  const d = document.createElement('div');
+  d.className = 'stat-card';
+  d.innerHTML = `<div class="val ${s.a?'stat-accent':''}" data-target="${s.v}">0</div><div class="lbl">${s.l}</div>`;
+  statsEl.appendChild(d);
+});
+
+// Animate on load
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if(e.isIntersecting) {
+      document.querySelectorAll('.val[data-target]').forEach(el => {
+        animateValue(el, parseInt(el.dataset.target));
+      });
+      observer.disconnect();
+    }
+  });
+},{threshold:0.1});
+observer.observe(statsEl);
+
+// ─── ENTITY BARS ───
+const barsEl = document.getElementById('entity-bars');
+const maxVal = entities[0].v;
+entities.forEach((e,i) => {
+  const d = document.createElement('div');
+  d.className = 'ebar';
+  d.innerHTML = `<div class="ebar-name">${e.n}</div><div class="ebar-track"><div class="ebar-fill" style="width:0%;background:${e.c}">${e.v}</div></div>`;
+  barsEl.appendChild(d);
+  setTimeout(() => {
+    d.querySelector('.ebar-fill').style.width = `${(e.v/maxVal)*100}%`;
+  }, 100 + i*50);
+});
+
+// ─── LINK TABLE ───
+const ltEl = document.getElementById('link-table');
+ltEl.innerHTML = '<thead><tr><th>Link Type</th><th>Count</th><th>Visual</th></tr></thead><tbody>' +
+  links.map(l => `<tr><td><span class="lbadge" style="background:${l.clr}22;color:${l.clr}">${l.type}</span></td><td style="color:#f4f4f5;font-weight:600">${l.cnt}</td><td><div style="width:${(l.cnt/714)*100}%;height:6px;background:${l.clr};border-radius:3px;min-width:4px"></div></td></tr>`).join('') +
+  '</tbody>';
+
+// ─── CONNECTION FLOW (SVG) ───
+const flowEl = document.getElementById('flow-container');
+const W=860, H=400;
+const nodes = [
+  {id:'content_type',x:80,y:200,r:45,label:'Content\nTypes',c:C.content_type},
+  {id:'recipe',x:250,y:80,r:35,label:'Recipes',c:C.recipe},
+  {id:'skill',x:250,y:320,r:42,label:'Skills',c:C.skill},
+  {id:'schema',x:430,y:40,r:22,label:'Schemas',c:C.schema},
+  {id:'style',x:430,y:130,r:26,label:'Styles',c:C.style},
+  {id:'channel',x:430,y:220,r:24,label:'Channels',c:C.channel},
+  {id:'tool',x:430,y:310,r:26,label:'Tools',c:C.tool},
+  {id:'kb',x:430,y:390,r:26,label:'KB Items',c:C.kb},
+  {id:'prompt',x:620,y:80,r:22,label:'Prompts',c:C.prompt},
+  {id:'rubric',x:620,y:180,r:22,label:'Rubrics',c:C.rubric},
+  {id:'metric',x:620,y:280,r:26,label:'Metrics',c:C.metric},
+  {id:'playbook',x:780,y:80,r:18,label:'Playbooks',c:C.playbook},
+  {id:'bundle',x:780,y:180,r:16,label:'Bundles',c:C.bundle},
+  {id:'agent',x:780,y:280,r:14,label:'Agents',c:C.agent},
+];
+
+const conns = [
+  // Content Types → everything (113 each)
+  {from:'content_type',to:'recipe',w:5,v:113},{from:'content_type',to:'style',w:5,v:113},
+  {from:'content_type',to:'channel',w:5,v:113},{from:'content_type',to:'tool',w:5,v:113},
+  {from:'content_type',to:'prompt',w:4,v:113},{from:'content_type',to:'rubric',w:4,v:113},
+  {from:'content_type',to:'metric',w:4,v:113},
+  // Recipes → schema/style/channel (118)
+  {from:'recipe',to:'schema',w:5,v:118},{from:'recipe',to:'style',w:5,v:118},{from:'recipe',to:'channel',w:5,v:118},
+  // Skills → tools/kb/skills
+  {from:'skill',to:'tool',w:3.5,v:82},{from:'skill',to:'kb',w:3,v:68},
+  // Metrics → rubrics
+  {from:'metric',to:'rubric',w:3,v:76},
+  // KB → various
+  {from:'kb',to:'style',w:2,v:46},{from:'kb',to:'channel',w:2,v:46},{from:'kb',to:'content_type',w:2,v:46},
+  // Playbooks/bundles
+  {from:'playbook',to:'bundle',w:2,v:30},{from:'playbook',to:'prompt',w:1.5,v:11},
+];
+
+let svg = `<svg viewBox="0 0 ${W} ${H}" class="flow-svg">`;
+svg += '<defs>';
+conns.forEach((conn,i) => {
+  const f = nodes.find(n=>n.id===conn.from);
+  const t = nodes.find(n=>n.id===conn.to);
+  svg += `<linearGradient id="lg${i}" x1="${f.x}" y1="${f.y}" x2="${t.x}" y2="${t.y}" gradientUnits="userSpaceOnUse">
+    <stop offset="0%" stop-color="${f.c}" stop-opacity="0.6"/>
+    <stop offset="100%" stop-color="${t.c}" stop-opacity="0.6"/>
+  </linearGradient>`;
+});
+svg += '</defs>';
+
+// Draw connections
+conns.forEach((conn,i) => {
+  const f = nodes.find(n=>n.id===conn.from);
+  const t = nodes.find(n=>n.id===conn.to);
+  const mx = (f.x+t.x)/2;
+  svg += `<path d="M${f.x},${f.y} C${mx},${f.y} ${mx},${t.y} ${t.x},${t.y}" fill="none" stroke="url(#lg${i})" stroke-width="${conn.w}" opacity="0.5">
+    <title>${f.label.replace('\n',' ')} → ${t.label.replace('\n',' ')}: ${conn.v} links</title>
+  </path>`;
+});
+
+// Draw nodes
+nodes.forEach(n => {
+  svg += `<circle cx="${n.x}" cy="${n.y}" r="${n.r}" fill="${n.c}" opacity="0.85" stroke="${n.c}" stroke-width="2" stroke-opacity="0.3"/>`;
+  const lines = n.label.split('\n');
+  lines.forEach((line,i) => {
+    const yOff = (i - (lines.length-1)/2) * 13;
+    svg += `<text x="${n.x}" y="${n.y+yOff+4}" text-anchor="middle" fill="white" font-size="11" font-weight="700">${line}</text>`;
+  });
+});
+
+// Layer labels
+svg += `<text x="80" y="16" text-anchor="middle" fill="#52525b" font-size="10" font-weight="600">CONTENT HUB</text>`;
+svg += `<text x="340" y="16" text-anchor="middle" fill="#52525b" font-size="10" font-weight="600">BINDING LAYER</text>`;
+svg += `<text x="620" y="16" text-anchor="middle" fill="#52525b" font-size="10" font-weight="600">EVALUATION</text>`;
+svg += `<text x="780" y="16" text-anchor="middle" fill="#52525b" font-size="10" font-weight="600">EXECUTION</text>`;
+svg += '</svg>';
+flowEl.innerHTML = svg;
+
+// ─── TAG HEATMAP ───
+const tagEl = document.getElementById('tag-grid');
+const tagMax = tags[0].v;
+tags.forEach(t => {
+  const pct = t.v/tagMax;
+  const op = Math.max(0.12, pct * 0.85);
+  const d = document.createElement('div');
+  d.className = 'tag-cell';
+  d.style.background = `rgba(192,132,252,${op})`;
+  d.innerHTML = `<div class="tn">${t.n}</div><div class="tv">${t.v} entities</div>`;
+  tagEl.appendChild(d);
+});
+
+// ─── ARTIFACT DONUT ───
+new Chart(document.getElementById('donut-chart'), {
+  type:'doughnut',
+  data:{labels:['With Artifacts','Without'],datasets:[{data:[850,770],backgroundColor:['#2dd4bf','#27272a'],borderWidth:0}]},
+  options:{cutout:'70%',plugins:{legend:{display:false},tooltip:{enabled:false}},responsive:true,maintainAspectRatio:true}
+});
+
+const artEl = document.getElementById('art-list');
+artifacts.forEach(a => {
+  artEl.innerHTML += `<div class="ai"><div class="adot" style="background:${a.c}"></div><span style="color:#a1a1aa">${a.n}</span> <span style="color:#f4f4f5;font-weight:600;margin-left:auto">${a.v}</span></div>`;
+});
+
+// ─── APP TREEMAP ───
+const treeEl = document.getElementById('treemap');
+const totalApps = apps.reduce((s,a)=>s+a.v,0);
+apps.forEach(a => {
+  const d = document.createElement('div');
+  d.className = 'tree-block';
+  d.style.flex = a.v;
+  d.style.background = a.c;
+  d.innerHTML = `<div class="tb-name">${a.n}</div><div class="tb-val">${a.v} apps</div>`;
+  treeEl.appendChild(d);
+});
+
+// ─── ARCHITECTURE ───
+const archEl = document.getElementById('architecture');
+archEl.innerHTML = `
+<div class="arch-layers">
+  <div class="arch-row">
+    <div class="arch-layer">
+      <h3 style="border-bottom:2px solid ${C.content_type};color:${C.content_type}">Content Pipeline</h3>
+      <div class="arch-pills">
+        <span class="arch-pill" style="background:${C.content_type}">Content Types · 113</span>
+        <span class="arch-pill" style="background:${C.recipe}">Recipes · 118</span>
+        <span class="arch-pill" style="background:${C.schema}">Schemas · 21</span>
+        <span class="arch-pill" style="background:${C.style}">Styles · 48</span>
+        <span class="arch-pill" style="background:${C.channel}">Channels · 27</span>
+      </div>
+    </div>
+    <div class="arch-layer">
+      <h3 style="border-bottom:2px solid ${C.skill};color:${C.skill}">Support Layer</h3>
+      <div class="arch-pills">
+        <span class="arch-pill" style="background:${C.skill}">Skills · 160</span>
+        <span class="arch-pill" style="background:${C.kb}">KB Items · 54</span>
+        <span class="arch-pill" style="background:${C.tool}">Tools · 42</span>
+        <span class="arch-pill" style="background:${C.prompt}">Prompts · 31</span>
+      </div>
+    </div>
+  </div>
+  <div class="arch-arrow">▼ entity_links (2,425) · entity_tags · entity_revisions · entity_embeddings ▼</div>
+  <div class="arch-row">
+    <div class="arch-layer">
+      <h3 style="border-bottom:2px solid ${C.metric};color:${C.metric}">Evaluation Layer</h3>
+      <div class="arch-pills">
+        <span class="arch-pill" style="background:${C.metric}">Metrics · 55</span>
+        <span class="arch-pill" style="background:${C.rubric}">Rubrics · 25</span>
+        <span class="arch-pill" style="background:${C.lint_rule}">Lint Rules · 8</span>
+      </div>
+    </div>
+    <div class="arch-layer">
+      <h3 style="border-bottom:2px solid ${C.playbook};color:${C.playbook}">Execution Layer</h3>
+      <div class="arch-pills">
+        <span class="arch-pill" style="background:${C.playbook}">Playbooks · 13</span>
+        <span class="arch-pill" style="background:${C.bundle}">Bundles · 11</span>
+        <span class="arch-pill" style="background:${C.agent}">Agents · 6</span>
+      </div>
+    </div>
+  </div>
+</div>`;
+</script>
 
 </body>
 </html>
