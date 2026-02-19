@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catalyst Registry Map</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0f; color: #e0e0e0; overflow-x: hidden; }
+  
+  .header { padding: 32px 40px 16px; border-bottom: 1px solid #1a1a2e; }
+  .header h1 { font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .header p { color: #888; font-size: 14px; }
+  .stats-bar { display: flex; gap: 32px; margin-top: 16px; flex-wrap: wrap; }
+  .stat { text-align: center; }
+  .stat .num { font-size: 32px; font-weight: 800; background: linear-gradient(135deg, #6366f1, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .stat .label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+
+  .main { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 24px 40px; }
+  @media (max-width: 900px) { .main { grid-template-columns: 1fr; } }
+
+  .card { background: #111118; border: 1px solid #1e1e2e; border-radius: 12px; padding: 24px; }
+  .card h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #ccc; }
+  .card.full { grid-column: 1 / -1; }
+
+  /* Entity Type Bars */
+  .bar-row { display: flex; align-items: center; margin-bottom: 8px; }
+  .bar-label { width: 110px; font-size: 13px; color: #aaa; text-align: right; padding-right: 12px; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 28px; background: #1a1a2e; border-radius: 6px; overflow: hidden; position: relative; cursor: pointer; }
+  .bar-fill { height: 100%; border-radius: 6px; transition: width 0.8s ease; display: flex; align-items: center; padding-left: 10px; font-size: 12px; font-weight: 600; color: #fff; min-width: 30px; }
+  .bar-track:hover .bar-fill { filter: brightness(1.2); }
+
+  /* Colors per type */
+  .t-skill .bar-fill { background: linear-gradient(90deg, #6366f1, #818cf8); }
+  .t-recipe .bar-fill { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+  .t-content_type .bar-fill { background: linear-gradient(90deg, #10b981, #34d399); }
+  .t-metric .bar-fill { background: linear-gradient(90deg, #ef4444, #f87171); }
+  .t-kb .bar-fill { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+  .t-style .bar-fill { background: linear-gradient(90deg, #ec4899, #f472b6); }
+  .t-tool .bar-fill { background: linear-gradient(90deg, #f97316, #fb923c); }
+  .t-prompt .bar-fill { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+  .t-channel .bar-fill { background: linear-gradient(90deg, #14b8a6, #2dd4bf); }
+  .t-rubric .bar-fill { background: linear-gradient(90deg, #e11d48, #fb7185); }
+  .t-schema .bar-fill { background: linear-gradient(90deg, #0ea5e9, #38bdf8); }
+  .t-playbook .bar-fill { background: linear-gradient(90deg, #84cc16, #a3e635); }
+  .t-bundle .bar-fill { background: linear-gradient(90deg, #d946ef, #e879f9); }
+  .t-lint_rule .bar-fill { background: linear-gradient(90deg, #78716c, #a8a29e); }
+  .t-agent .bar-fill { background: linear-gradient(90deg, #facc15, #fde047); }
+  .t-lint_ruleset .bar-fill { background: linear-gradient(90deg, #64748b, #94a3b8); }
+
+  /* Link Graph */
+  .link-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .link-table th { text-align: left; color: #666; font-weight: 500; padding: 6px 8px; border-bottom: 1px solid #1e1e2e; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .link-table td { padding: 6px 8px; border-bottom: 1px solid #141420; }
+  .link-table tr:hover { background: #1a1a2e; }
+  .link-type-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .lt-requires { background: #ef444420; color: #f87171; }
+  .lt-recommends { background: #3b82f620; color: #60a5fa; }
+  .lt-related { background: #64748b20; color: #94a3b8; }
+  .lt-uses_tool { background: #f9731620; color: #fb923c; }
+  .lt-uses_prompt { background: #8b5cf620; color: #a78bfa; }
+  .lt-bundle_member { background: #d946ef20; color: #e879f9; }
+  .lt-uses_kb { background: #3b82f620; color: #93c5fd; }
+  .lt-alternate { background: #78716c20; color: #a8a29e; }
+  .lt-pairs_with { background: #ec489920; color: #f472b6; }
+  .lt-often_follows { background: #84cc1620; color: #a3e635; }
+  .lt-prerequisite { background: #ef444440; color: #fca5a5; }
+  .lt-parent { background: #14b8a620; color: #5eead4; }
+
+  /* Sankey-style flow */
+  .flow-section { padding: 24px 40px; }
+  .flow-section h2 { font-size: 16px; color: #ccc; margin-bottom: 16px; }
+  svg text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+  /* KB Quality */
+  .quality-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+  .quality-label { width: 80px; font-size: 13px; color: #aaa; }
+  .quality-bar { flex: 1; display: flex; height: 24px; border-radius: 6px; overflow: hidden; }
+  .q-rich { background: #10b981; }
+  .q-medium { background: #f59e0b; }
+  .q-thin { background: #ef4444; }
+  .quality-bar span { display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #fff; min-width: 20px; }
+
+  /* Donut */
+  .donut-container { display: flex; align-items: center; gap: 24px; }
+  .donut-legend { font-size: 13px; }
+  .donut-legend div { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .donut-legend .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* Connection Map */
+  .conn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 600px) { .conn-grid { grid-template-columns: repeat(2, 1fr); } }
+  .conn-node { background: #1a1a2e; border-radius: 8px; padding: 12px; text-align: center; position: relative; }
+  .conn-node .type-name { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .conn-node .conn-count { font-size: 20px; font-weight: 800; }
+  .conn-node .conn-detail { font-size: 10px; color: #666; margin-top: 2px; }
+
+  /* Health Score */
+  .health-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .health-item { background: #1a1a2e; border-radius: 8px; padding: 16px; text-align: center; }
+  .health-item .score { font-size: 36px; font-weight: 800; }
+  .health-item .hlabel { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+  .score-green { color: #10b981; }
+  .score-yellow { color: #f59e0b; }
+  .score-red { color: #ef4444; }
+
+  .section-gap { height: 8px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Catalyst Registry Map</h1>
+  <p>Live snapshot of the Katailyst atomic unit registry — Feb 19, 2026</p>
+  <div class="stats-bar">
+    <div class="stat"><div class="num">735</div><div class="label">Total Entities</div></div>
+    <div class="stat"><div class="num">16</div><div class="label">Unit Types</div></div>
+    <div class="stat"><div class="num">2,425</div><div class="label">Entity Links</div></div>
+    <div class="stat"><div class="num">208</div><div class="label">Apps</div></div>
+    <div class="stat"><div class="num">162</div><div class="label">KB Variants</div></div>
+    <div class="stat"><div class="num">98.5%</div><div class="label">Published</div></div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Entity Distribution -->
+  <div class="card">
+    <h2>Entity Distribution by Type</h2>
+    <div class="bar-row t-skill"><div class="bar-label">Skills</div><div class="bar-track"><div class="bar-fill" style="width:100%">160</div></div></div>
+    <div class="bar-row t-recipe"><div class="bar-label">Recipes</div><div class="bar-track"><div class="bar-fill" style="width:73.8%">118</div></div></div>
+    <div class="bar-row t-content_type"><div class="bar-label">Content Types</div><div class="bar-track"><div class="bar-fill" style="width:70.6%">113</div></div></div>
+    <div class="bar-row t-metric"><div class="bar-label">Metrics</div><div class="bar-track"><div class="bar-fill" style="width:34.4%">55</div></div></div>
+    <div class="bar-row t-kb"><div class="bar-label">KB Items</div><div class="bar-track"><div class="bar-fill" style="width:33.8%">54</div></div></div>
+    <div class="bar-row t-style"><div class="bar-label">Styles</div><div class="bar-track"><div class="bar-fill" style="width:30%">48</div></div></div>
+    <div class="bar-row t-tool"><div class="bar-label">Tools</div><div class="bar-track"><div class="bar-fill" style="width:26.3%">42</div></div></div>
+    <div class="bar-row t-prompt"><div class="bar-label">Prompts</div><div class="bar-track"><div class="bar-fill" style="width:19.4%">31</div></div></div>
+    <div class="bar-row t-channel"><div class="bar-label">Channels</div><div class="bar-track"><div class="bar-fill" style="width:16.9%">27</div></div></div>
+    <div class="bar-row t-rubric"><div class="bar-label">Rubrics</div><div class="bar-track"><div class="bar-fill" style="width:15.6%">25</div></div></div>
+    <div class="bar-row t-schema"><div class="bar-label">Schemas</div><div class="bar-track"><div class="bar-fill" style="width:13.1%">21</div></div></div>
+    <div class="bar-row t-playbook"><div class="bar-label">Playbooks</div><div class="bar-track"><div class="bar-fill" style="width:8.1%">13</div></div></div>
+    <div class="bar-row t-bundle"><div class="bar-label">Bundles</div><div class="bar-track"><div class="bar-fill" style="width:6.9%">11</div></div></div>
+    <div class="bar-row t-lint_rule"><div class="bar-label">Lint Rules</div><div class="bar-track"><div class="bar-fill" style="width:5%">8</div></div></div>
+    <div class="bar-row t-agent"><div class="bar-label">Agents</div><div class="bar-track"><div class="bar-fill" style="width:3.8%">6</div></div></div>
+    <div class="bar-row t-lint_ruleset"><div class="bar-label">Lint Rulesets</div><div class="bar-track"><div class="bar-fill" style="width:1.9%">3</div></div></div>
+  </div>
+
+  <!-- Link Distribution -->
+  <div class="card">
+    <h2>Entity Link Graph (2,425 total)</h2>
+    <table class="link-table">
+      <thead><tr><th>Link Type</th><th>Count</th><th>Share</th></tr></thead>
+      <tbody>
+        <tr><td><span class="link-type-badge lt-requires">requires</span></td><td>714</td><td>29.4%</td></tr>
+        <tr><td><span class="link-type-badge lt-recommends">recommends</span></td><td>555</td><td>22.9%</td></tr>
+        <tr><td><span class="link-type-badge lt-related">related</span></td><td>506</td><td>20.9%</td></tr>
+        <tr><td><span class="link-type-badge lt-uses_tool">uses_tool</span></td><td>210</td><td>8.7%</td></tr>
+        <tr><td><span class="link-type-badge lt-uses_prompt">uses_prompt</span></td><td>125</td><td>5.2%</td></tr>
+        <tr><td><span class="link-type-badge lt-bundle_member">bundle_member</span></td><td>107</td><td>4.4%</td></tr>
+        <tr><td><span class="link-type-badge lt-uses_kb">uses_kb</span></td><td>70</td><td>2.9%</td></tr>
+        <tr><td><span class="link-type-badge lt-alternate">alternate</span></td><td>67</td><td>2.8%</td></tr>
+        <tr><td><span class="link-type-badge lt-pairs_with">pairs_with</span></td><td>59</td><td>2.4%</td></tr>
+        <tr><td><span class="link-type-badge lt-often_follows">often_follows</span></td><td>9</td><td>0.4%</td></tr>
+        <tr><td><span class="link-type-badge lt-prerequisite">prerequisite</span></td><td>2</td><td>0.1%</td></tr>
+        <tr><td><span class="link-type-badge lt-parent">parent</span></td><td>1</td><td>0.04%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- KB Quality -->
+  <div class="card">
+    <h2>KB Item Quality (54 items, 162 variants)</h2>
+    <p style="font-size:12px; color:#666; margin-bottom:12px;">Rich = >500 chars | Medium = 50-500 chars | Thin = <50 chars</p>
+    <div class="quality-row">
+      <div class="quality-label">Snippet</div>
+      <div class="quality-bar">
+        <span class="q-rich" style="flex:24">24</span>
+        <span class="q-medium" style="flex:30">30</span>
+      </div>
+    </div>
+    <div class="quality-row">
+      <div class="quality-label">Distilled</div>
+      <div class="quality-bar">
+        <span class="q-rich" style="flex:53">53</span>
+        <span class="q-thin" style="flex:1">1</span>
+      </div>
+    </div>
+    <div class="quality-row">
+      <div class="quality-label">Full</div>
+      <div class="quality-bar">
+        <span class="q-rich" style="flex:53">53</span>
+        <span class="q-thin" style="flex:1">1</span>
+      </div>
+    </div>
+    <p style="font-size:12px; color:#10b981; margin-top:12px;">KB variants are actually in good shape — 98% have rich full variants</p>
+  </div>
+
+  <!-- Health Scores -->
+  <div class="card">
+    <h2>Registry Health Scorecard</h2>
+    <div class="health-grid">
+      <div class="health-item"><div class="score score-green">A</div><div class="hlabel">Schema Design</div></div>
+      <div class="health-item"><div class="score score-green">A</div><div class="hlabel">Taxonomy</div></div>
+      <div class="health-item"><div class="score score-green">A-</div><div class="hlabel">KB Quality</div></div>
+      <div class="health-item"><div class="score score-green">A-</div><div class="hlabel">Link Graph</div></div>
+      <div class="health-item"><div class="score score-red">F</div><div class="hlabel">Artifacts</div></div>
+      <div class="health-item"><div class="score score-yellow">B-</div><div class="hlabel">Playbooks</div></div>
+    </div>
+    <p style="font-size:12px; color:#888; margin-top:12px;">
+      Link graph updated: 2,425 links across 735 entities (avg 3.3 links/entity). 
+      Previous audit said 2 links — that was wrong (only queried uses_kb). 
+      Artifacts table is literally 0 rows — all artifact data lives in entity_revisions.artifacts_json.
+    </p>
+  </div>
+
+  <!-- Cross-Type Connection Map -->
+  <div class="card full">
+    <h2>How Entity Types Connect (Top Cross-Type Links)</h2>
+    <svg viewBox="0 0 900 420" style="width:100%; height:auto;">
+      <!-- Node circles -->
+      <!-- Row 1: Content pipeline -->
+      <circle cx="100" cy="80" r="35" fill="#6366f1" opacity="0.8"/>
+      <text x="100" y="76" text-anchor="middle" fill="white" font-size="11" font-weight="700">Skills</text>
+      <text x="100" y="90" text-anchor="middle" fill="white" font-size="10">160</text>
+
+      <circle cx="280" cy="80" r="30" fill="#10b981" opacity="0.8"/>
+      <text x="280" y="76" text-anchor="middle" fill="white" font-size="10" font-weight="700">Content</text>
+      <text x="280" y="89" text-anchor="middle" fill="white" font-size="10">Types 113</text>
+
+      <circle cx="450" cy="80" r="30" fill="#f59e0b" opacity="0.8"/>
+      <text x="450" y="76" text-anchor="middle" fill="white" font-size="11" font-weight="700">Recipes</text>
+      <text x="450" y="90" text-anchor="middle" fill="white" font-size="10">118</text>
+
+      <circle cx="620" cy="80" r="22" fill="#0ea5e9" opacity="0.8"/>
+      <text x="620" y="76" text-anchor="middle" fill="white" font-size="10" font-weight="700">Schemas</text>
+      <text x="620" y="89" text-anchor="middle" fill="white" font-size="10">21</text>
+
+      <circle cx="770" cy="80" r="20" fill="#84cc16" opacity="0.8"/>
+      <text x="770" y="76" text-anchor="middle" fill="white" font-size="10" font-weight="700">Play-</text>
+      <text x="770" y="89" text-anchor="middle" fill="white" font-size="10">books 13</text>
+
+      <!-- Row 2: Support layer -->
+      <circle cx="100" cy="220" r="24" fill="#3b82f6" opacity="0.8"/>
+      <text x="100" y="216" text-anchor="middle" fill="white" font-size="11" font-weight="700">KB</text>
+      <text x="100" y="229" text-anchor="middle" fill="white" font-size="10">54</text>
+
+      <circle cx="250" cy="220" r="22" fill="#f97316" opacity="0.8"/>
+      <text x="250" y="216" text-anchor="middle" fill="white" font-size="11" font-weight="700">Tools</text>
+      <text x="250" y="229" text-anchor="middle" fill="white" font-size="10">42</text>
+
+      <circle cx="390" cy="220" r="20" fill="#8b5cf6" opacity="0.8"/>
+      <text x="390" y="216" text-anchor="middle" fill="white" font-size="10" font-weight="700">Prompts</text>
+      <text x="390" y="229" text-anchor="middle" fill="white" font-size="10">31</text>
+
+      <circle cx="520" cy="220" r="22" fill="#ec4899" opacity="0.8"/>
+      <text x="520" y="216" text-anchor="middle" fill="white" font-size="11" font-weight="700">Styles</text>
+      <text x="520" y="229" text-anchor="middle" fill="white" font-size="10">48</text>
+
+      <circle cx="650" cy="220" r="20" fill="#14b8a6" opacity="0.8"/>
+      <text x="650" y="216" text-anchor="middle" fill="white" font-size="10" font-weight="700">Channels</text>
+      <text x="650" y="229" text-anchor="middle" fill="white" font-size="10">27</text>
+
+      <circle cx="780" cy="220" r="20" fill="#d946ef" opacity="0.8"/>
+      <text x="780" y="216" text-anchor="middle" fill="white" font-size="10" font-weight="700">Bundles</text>
+      <text x="780" y="229" text-anchor="middle" fill="white" font-size="10">11</text>
+
+      <!-- Row 3: Eval layer -->
+      <circle cx="200" cy="360" r="22" fill="#ef4444" opacity="0.8"/>
+      <text x="200" y="356" text-anchor="middle" fill="white" font-size="10" font-weight="700">Metrics</text>
+      <text x="200" y="369" text-anchor="middle" fill="white" font-size="10">55</text>
+
+      <circle cx="370" cy="360" r="20" fill="#e11d48" opacity="0.8"/>
+      <text x="370" y="356" text-anchor="middle" fill="white" font-size="10" font-weight="700">Rubrics</text>
+      <text x="370" y="369" text-anchor="middle" fill="white" font-size="10">25</text>
+
+      <circle cx="530" cy="360" r="16" fill="#78716c" opacity="0.8"/>
+      <text x="530" y="356" text-anchor="middle" fill="white" font-size="9" font-weight="700">Lint</text>
+      <text x="530" y="367" text-anchor="middle" fill="white" font-size="9">Rules 8</text>
+
+      <circle cx="670" cy="360" r="16" fill="#facc15" opacity="0.8"/>
+      <text x="670" y="356" text-anchor="middle" fill="black" font-size="10" font-weight="700">Agents</text>
+      <text x="670" y="369" text-anchor="middle" fill="black" font-size="10">6</text>
+
+      <!-- Connection lines (top links) -->
+      <!-- Skills → KB (uses_kb: 68) -->
+      <line x1="100" y1="115" x2="100" y2="196" stroke="#3b82f6" stroke-width="3" opacity="0.4"/>
+      <!-- Skills → Tools (uses_tool: 82) -->
+      <line x1="130" y1="105" x2="230" y2="200" stroke="#f97316" stroke-width="3.5" opacity="0.4"/>
+      <!-- Skills → Skills (related: 96) -->
+      <path d="M 65 80 C 30 80, 30 80, 65 85" stroke="#6366f1" stroke-width="3" opacity="0.3" fill="none"/>
+      <!-- Content Types → Recipes (requires: 113) -->
+      <line x1="310" y1="80" x2="420" y2="80" stroke="#ef4444" stroke-width="5" opacity="0.4"/>
+      <!-- Content Types → Tools (uses_tool: 113) -->
+      <line x1="265" y1="108" x2="250" y2="198" stroke="#f97316" stroke-width="5" opacity="0.3"/>
+      <!-- Content Types → Prompts (uses_prompt: 113) -->
+      <line x1="300" y1="108" x2="380" y2="200" stroke="#8b5cf6" stroke-width="5" opacity="0.3"/>
+      <!-- Content Types → Rubrics (recommends: 113) -->
+      <line x1="280" y1="110" x2="370" y2="340" stroke="#e11d48" stroke-width="4" opacity="0.2"/>
+      <!-- Content Types → Metrics (recommends: 113) -->
+      <line x1="265" y1="110" x2="200" y2="338" stroke="#ef4444" stroke-width="4" opacity="0.2"/>
+      <!-- Content Types → Styles (requires: 113) -->
+      <line x1="305" y1="105" x2="505" y2="205" stroke="#ec4899" stroke-width="4" opacity="0.3"/>
+      <!-- Content Types → Channels (requires: 113) -->
+      <line x1="310" y1="95" x2="635" y2="205" stroke="#14b8a6" stroke-width="4" opacity="0.2"/>
+      <!-- Recipes → Schemas (requires: 118) -->
+      <line x1="480" y1="80" x2="598" y2="80" stroke="#ef4444" stroke-width="5" opacity="0.4"/>
+      <!-- Recipes → Styles (requires: 118) -->
+      <line x1="450" y1="110" x2="520" y2="198" stroke="#ec4899" stroke-width="5" opacity="0.3"/>
+      <!-- Recipes → Channels (requires: 118) -->
+      <line x1="470" y1="105" x2="640" y2="200" stroke="#14b8a6" stroke-width="5" opacity="0.3"/>
+      <!-- Metrics → Rubrics (recommends: 76) -->
+      <line x1="222" y1="360" x2="350" y2="360" stroke="#e11d48" stroke-width="3" opacity="0.4"/>
+      <!-- Playbooks → Bundles (bundle_member: 30) -->
+      <line x1="770" y1="100" x2="780" y2="200" stroke="#d946ef" stroke-width="2" opacity="0.4"/>
+
+      <!-- Layer labels -->
+      <text x="850" y="80" fill="#444" font-size="11" font-weight="600" text-anchor="end">CONTENT</text>
+      <text x="850" y="95" fill="#444" font-size="11" text-anchor="end">PIPELINE</text>
+      <text x="850" y="220" fill="#444" font-size="11" font-weight="600" text-anchor="end">SUPPORT</text>
+      <text x="850" y="235" fill="#444" font-size="11" text-anchor="end">LAYER</text>
+      <text x="850" y="360" fill="#444" font-size="11" font-weight="600" text-anchor="end">EVAL</text>
+      <text x="850" y="375" fill="#444" font-size="11" text-anchor="end">LAYER</text>
+    </svg>
+    <p style="font-size:11px; color:#666; margin-top:8px;">
+      Line thickness = link count. Content Types are the most connected node (linked to every other layer). 
+      The pipeline flows: Content Type → Recipe → Schema/Style/Channel. Skills and KB feed in from the support layer.
+      Rubrics and Metrics evaluate outputs.
+    </p>
+  </div>
+
+</div>
+
+<div style="padding: 24px 40px;">
+  <div class="card">
+    <h2>System Architecture — How It All Fits Together</h2>
+    <pre style="font-size:12px; line-height:1.6; color:#aaa; overflow-x:auto;">
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           CATALYST REGISTRY (Supabase)                         │
+│                                735 entities                                     │
+│                                                                                 │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
+│  │  CONTENT      │  │  SUPPORT     │  │  EVALUATION  │  │  EXECUTION   │       │
+│  │  PIPELINE     │  │  LAYER       │  │  LAYER       │  │  LAYER       │       │
+│  │               │  │              │  │              │  │              │       │
+│  │ Content Types │  │ KB Items     │  │ Rubrics      │  │ Playbooks    │       │
+│  │ Recipes       │  │ Tools        │  │ Metrics      │  │ Bundles      │       │
+│  │ Schemas       │  │ Prompts      │  │ Lint Rules   │  │ Agents       │       │
+│  │ Styles        │  │ Skills       │  │ Lint Rulesets │  │ Automations  │       │
+│  │ Channels      │  │              │  │ Evaluations  │  │ Runs         │       │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘       │
+│         │                  │                  │                  │               │
+│         └──────────────────┴──────────────────┴──────────────────┘               │
+│                              entity_links (2,425)                               │
+│                              entity_tags (taxonomy)                             │
+│                              entity_revisions (versioning)                      │
+│                              entity_embeddings (vector search)                  │
+└─────────────────────────────────────────────────────────────────────────────────┘
+         │                                                     │
+         ▼                                                     ▼
+┌─────────────────┐                                 ┌─────────────────┐
+│  CONTENT SYSTEM │                                 │  RUNTIME SYSTEM │
+│                 │                                 │                 │
+│ Assets          │                                 │ Runs            │
+│ Asset Versions  │                                 │ Run Steps       │
+│ Campaigns       │                                 │ Run Tool Calls  │
+│ Calendar Items  │                                 │ Run Outputs     │
+│ Publish Events  │                                 │ Run Costs       │
+│ Editorial Tasks │                                 │ Automations     │
+└─────────────────┘                                 └─────────────────┘
+         │                                                     │
+         ▼                                                     ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              DISCOVERY SYSTEM                                   │
+│  discover() → ranked menus | traverse_links() → graph walk                     │
+│  Weighted scoring: semantic + tags + links + tier + rating + eval + recency     │
+└─────────────────────────────────────────────────────────────────────────────────┘
+    </pre>
+  </div>
+</div>
+
+</body>
+</html>
