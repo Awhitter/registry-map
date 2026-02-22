@@ -154,7 +154,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 <!-- HEADER -->
 <div class="hdr">
   <div class="hdr-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-linejoin="round"/></svg></div>
-  <div><h1>Catalyst AI Registry</h1><div class="sub"><span class="live"></span> Mission Control · Live Data · Feb 22, 2026</div></div>
+  <div><h1>Catalyst AI Registry</h1><div class="sub"><span class="live"></span> Mission Control · Live Data · Feb 19, 2026</div></div>
 </div>
 <div class="hdr-desc">The modular AI content factory for Higher Learning Technologies. 16 atomic unit types compose into workflows that research, draft, evaluate, and publish content across 208 test prep apps and 27 distribution channels. Everything is wired through Supabase with 87 database tables.</div>
 
@@ -166,11 +166,11 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 <!-- ENTITY BARS + LINK TABLE -->
 <div class="grid2 reveal">
   <div class="card">
-    <div class="card-h"><div class="dot" style="background:#38bdf8"></div><h2>Entity Distribution · 763 entities across 16 types</h2></div>
+    <div class="card-h"><div class="dot" style="background:#38bdf8"></div><h2>Entity Distribution · 746 entities across 16 types</h2></div>
     <div class="card-b" id="bars"></div>
   </div>
   <div class="card">
-    <div class="card-h"><div class="dot" style="background:#4ade80"></div><h2>Link Graph · 2,736 connections · 12 link types</h2></div>
+    <div class="card-h"><div class="dot" style="background:#4ade80"></div><h2>Link Graph · 2,425 connections · 12 link types</h2></div>
     <div class="card-b"><table class="lt" id="ltable"></table></div>
   </div>
 </div>
@@ -237,7 +237,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 <!-- TOOLS + SCHEMAS -->
 <div class="grid2e reveal">
   <div class="card">
-    <div class="card-h"><div class="dot" style="background:#fb923c"></div><h2>51 Tools by Type & Provider</h2></div>
+    <div class="card-h"><div class="dot" style="background:#fb923c"></div><h2>42 Tools by Type & Provider</h2></div>
     <div class="card-b" id="toolsList"></div>
   </div>
   <div class="card">
@@ -280,7 +280,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 <!-- KB QUALITY + AVG TAGS -->
 <div class="grid2e reveal mt">
   <div class="card">
-    <div class="card-h"><div class="dot" style="background:#f472b6"></div><h2>KB Quality — 210 Variants · 3 Depth Tiers</h2></div>
+    <div class="card-h"><div class="dot" style="background:#f472b6"></div><h2>KB Quality — 192 Variants · 3 Depth Tiers</h2></div>
     <div class="card-b"><div class="chart-wrap"><canvas id="kbChart"></canvas></div></div>
   </div>
   <div class="card">
@@ -310,7 +310,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 
 <div class="footer">
   <div class="footer-brand">Catalyst AI Registry · Higher Learning Technologies</div>
-  <div class="footer-sub">Powered by Supabase · 87 Tables · 763 Entities · 2,736 Links · Built by Victoria</div>
+  <div class="footer-sub">Powered by Supabase · 87 Tables · 746 Entities · 2,425 Links · Built by Victoria</div>
   <div class="footer-tables">registry_entities · entity_links · entity_tags · entity_revisions · skills · tools · prompts · kb_items · kb_variants · content_types · recipes · schemas · styles · channels · rubrics · metrics · bundles · playbooks · agents · runs · evaluations · apps</div>
 </div>
 </div>
@@ -323,19 +323,19 @@ document.querySelectorAll('.sc').forEach(el=>{el.addEventListener('mousemove',e=
 const C={skill:'#38bdf8',recipe:'#4ade80',content_type:'#fbbf24',metric:'#c084fc',kb:'#f87171',style:'#a78bfa',tool:'#fb923c',prompt:'#f472b6',channel:'#60a5fa',rubric:'#a3e635',schema:'#34d399',playbook:'#2dd4bf',bundle:'#67e8f9',lint_rule:'#e879f9',agent:'#818cf8',lint_ruleset:'#eab308'};
 
 // ─── STATS ───
-const stats=[{l:'Entities',v:763},{l:'Types',v:16},{l:'Links',v:2736},{l:'Apps',v:208},{l:'Tables',v:87},{l:'Revisions',v:1620},{l:'KB Variants',v:210},{l:'Runs',v:78}];
+const stats=[{l:'Entities',v:746},{l:'Types',v:16},{l:'Links',v:2425},{l:'Apps',v:208},{l:'Tables',v:87},{l:'Revisions',v:1620},{l:'KB Variants',v:192},{l:'Runs',v:75}];
 const sEl=document.getElementById('stats');
 stats.forEach(s=>{const d=document.createElement('div');d.className='sc';d.innerHTML=`<div class="v" data-t="${s.v}">0</div><div class="l">${s.l}</div>`;sEl.appendChild(d)});
 function animV(el,end){let st=null;const step=ts=>{if(!st)st=ts;const p=Math.min((ts-st)/1200,1);el.textContent=Math.floor(p*end).toLocaleString();if(p<1)requestAnimationFrame(step);else el.textContent=end.toLocaleString()};requestAnimationFrame(step)}
 document.querySelectorAll('.v[data-t]').forEach(el=>animV(el,+el.dataset.t));
 
 // ─── ENTITY BARS ───
-const entities=[{n:'Skills',v:163,c:C.skill,s:'152 published, 8 staged'},{n:'Recipes',v:118,c:C.recipe},{n:'Content Types',v:113,c:C.content_type},{n:'KB Items',v:70,c:C.kb},{n:'Metrics',v:55,c:C.metric},{n:'Styles',v:48,c:C.style},{n:'Tools',v:51,c:C.tool,s:'39 published, 3 staged'},{n:'Prompts',v:31,c:C.prompt},{n:'Channels',v:27,c:C.channel},{n:'Rubrics',v:25,c:C.rubric},{n:'Schemas',v:21,c:C.schema},{n:'Playbooks',v:13,c:C.playbook},{n:'Bundles',v:11,c:C.bundle},{n:'Lint Rules',v:8,c:C.lint_rule},{n:'Agents',v:6,c:C.agent},{n:'Lint Rulesets',v:3,c:C.lint_ruleset}];
+const entities=[{n:'Skills',v:160,c:C.skill,s:'152 published, 8 staged'},{n:'Recipes',v:118,c:C.recipe},{n:'Content Types',v:113,c:C.content_type},{n:'KB Items',v:64,c:C.kb},{n:'Metrics',v:55,c:C.metric},{n:'Styles',v:48,c:C.style},{n:'Tools',v:42,c:C.tool,s:'39 published, 3 staged'},{n:'Prompts',v:31,c:C.prompt},{n:'Channels',v:27,c:C.channel},{n:'Rubrics',v:25,c:C.rubric},{n:'Schemas',v:21,c:C.schema},{n:'Playbooks',v:13,c:C.playbook},{n:'Bundles',v:11,c:C.bundle},{n:'Lint Rules',v:8,c:C.lint_rule},{n:'Agents',v:6,c:C.agent},{n:'Lint Rulesets',v:3,c:C.lint_ruleset}];
 const bEl=document.getElementById('bars');
-entities.forEach((e,i)=>{const d=document.createElement('div');d.className='bar';d.innerHTML=`<div class="bar-n">${e.n}</div><div class="bar-t"><div class="bar-f" style="width:0%;background:${e.c}">${e.v}</div></div>`;bEl.appendChild(d);setTimeout(()=>d.querySelector('.bar-f').style.width=`${(e.v/163)*100}%`,80+i*40)});
+entities.forEach((e,i)=>{const d=document.createElement('div');d.className='bar';d.innerHTML=`<div class="bar-n">${e.n}</div><div class="bar-t"><div class="bar-f" style="width:0%;background:${e.c}">${e.v}</div></div>`;bEl.appendChild(d);setTimeout(()=>d.querySelector('.bar-f').style.width=`${(e.v/160)*100}%`,80+i*40)});
 
 // ─── LINK TABLE ───
-const links=[{t:'requires',v:715,c:'#ef4444',d:'recipe→style/schema/channel, content_type→recipe/style/channel'},{t:'recommends',v:618,c:'#3b82f6',d:'content_type→metric/rubric, kb→channel/style'},{t:'related',v:612,c:'#6b7280',d:'skill↔skill, kb↔kb, recipe↔content_type'},{t:'uses_tool',v:218,c:'#fb923c',d:'content_type→tool, skill→tool'},{t:'uses_prompt',v:134,c:'#a78bfa',d:'content_type→prompt, playbook→prompt'},{t:'bundle_member',v:107,c:'#d946ef',d:'playbook→bundle, tool→bundle, kb→bundle'},{t:'uses_kb',v:105,c:'#60a5fa',d:'skill→kb'},{t:'alternate',v:82,c:'#78716c',d:'skill↔skill'},{t:'pairs_with',v:118,c:'#ec4899',d:'skill↔skill, kb↔kb'},{t:'often_follows',v:23,c:'#84cc16'},{t:'prerequisite',v:2,c:'#fca5a5'},{t:'parent',v:1,c:'#5eead4'}];
+const links=[{t:'requires',v:714,c:'#ef4444',d:'recipe→style/schema/channel, content_type→recipe/style/channel'},{t:'recommends',v:555,c:'#3b82f6',d:'content_type→metric/rubric, kb→channel/style'},{t:'related',v:506,c:'#6b7280',d:'skill↔skill, kb↔kb, recipe↔content_type'},{t:'uses_tool',v:210,c:'#fb923c',d:'content_type→tool, skill→tool'},{t:'uses_prompt',v:125,c:'#a78bfa',d:'content_type→prompt, playbook→prompt'},{t:'bundle_member',v:107,c:'#d946ef',d:'playbook→bundle, tool→bundle, kb→bundle'},{t:'uses_kb',v:70,c:'#60a5fa',d:'skill→kb'},{t:'alternate',v:69,c:'#78716c',d:'skill↔skill'},{t:'pairs_with',v:37,c:'#ec4899',d:'skill↔skill, kb↔kb'},{t:'often_follows',v:9,c:'#84cc16'},{t:'prerequisite',v:2,c:'#fca5a5'},{t:'parent',v:1,c:'#5eead4'}];
 const ltEl=document.getElementById('ltable');
 ltEl.innerHTML='<thead><tr><th>Link Type</th><th>Count</th><th>Key Patterns</th></tr></thead><tbody>'+links.map(l=>`<tr><td><span class="badge" style="background:${l.c}22;color:${l.c}">${l.t}</span></td><td style="color:#f4f4f5;font-weight:600">${l.v}</td><td style="color:#64748b;font-size:8px">${l.d||''}</td></tr>`).join('')+'</tbody>';
 
@@ -347,12 +347,12 @@ const svg=d3.select('#network').append('svg').attr('viewBox',`0 0 ${width} ${hei
 const defs=svg.append('defs');
 const nodes=[
   {id:'content_type',label:'Content Types',count:113,color:C.content_type,r:30},
-  {id:'skill',label:'Skills',count:163,color:C.skill,r:35},
+  {id:'skill',label:'Skills',count:160,color:C.skill,r:35},
   {id:'recipe',label:'Recipes',count:118,color:C.recipe,r:28},
   {id:'metric',label:'Metrics',count:55,color:C.metric,r:20},
-  {id:'kb',label:'KB Items',count:70,color:C.kb,r:22},
+  {id:'kb',label:'KB Items',count:64,color:C.kb,r:22},
   {id:'style',label:'Styles',count:48,color:C.style,r:18},
-  {id:'tool',label:'Tools',count:51,color:C.tool,r:18},
+  {id:'tool',label:'Tools',count:42,color:C.tool,r:18},
   {id:'prompt',label:'Prompts',count:31,color:C.prompt,r:16},
   {id:'channel',label:'Channels',count:27,color:C.channel,r:15},
   {id:'rubric',label:'Rubrics',count:25,color:C.rubric,r:14},
@@ -403,13 +403,13 @@ sim.on('tick',()=>{
 
 // ─── 16 ATOMIC UNITS (with real data) ───
 const units=[
-  {n:'Skills',c:163,color:C.skill,icon:'⚡',desc:'Procedural knowledge for agents. Portable instruction sets with SKILL.md entrypoints. Categories: engineering, database, marketing. All single_shot execution mode, 300s timeout, 2 retries.',items:'<strong>Examples:</strong> Supabase Postgres Best Practices, Next.js Best Practices, Research Trends, Find Skills, Systematic Debugging, Craft Multimedia Study Guide'},
+  {n:'Skills',c:160,color:C.skill,icon:'⚡',desc:'Procedural knowledge for agents. Portable instruction sets with SKILL.md entrypoints. Categories: engineering, database, marketing. All single_shot execution mode, 300s timeout, 2 retries.',items:'<strong>Examples:</strong> Supabase Postgres Best Practices, Next.js Best Practices, Research Trends, Find Skills, Systematic Debugging, Craft Multimedia Study Guide'},
   {n:'Recipes',c:118,color:C.recipe,icon:'🧪',desc:'Bind schema + style + channel + constraints into ready-to-run presets. Every recipe requires exactly one schema, one style, and one channel. 118 recipes cover all content production patterns.',items:'<strong>Links:</strong> Each recipe has 3 requires links (schema, style, channel) + related content_type'},
   {n:'Content Types',c:113,color:C.content_type,icon:'📄',desc:'Publishing contracts across 11 families. Each type wires to tools, prompts, rubrics, metrics, styles, and channels. 630 modality assignments, 472 ops (research/draft/evaluate/publish).',items:'<strong>Families:</strong> qbank:22, social:20, message:14, visual:13, article:13, web:11, study_guide:7, report:4, audio:3, presentation:3, interactive:3'},
-  {n:'KB Items',c:70,color:C.kb,icon:'📚',desc:'Long-form reference context. 210 variants across 3 depth tiers: snippet (avg 550 chars, 144 tokens), distilled (1,501 chars, 379 tokens), full (2,538 chars, 666 tokens). Every KB item has all 3.',items:'<strong>Examples:</strong> Tools Guide Overview (60 links), Content Performance Playbook (28 links)'},
+  {n:'KB Items',c:64,color:C.kb,icon:'📚',desc:'Long-form reference context. 192 variants across 3 depth tiers: snippet (avg 550 chars, 144 tokens), distilled (1,501 chars, 379 tokens), full (2,538 chars, 666 tokens). Every KB item has all 3.',items:'<strong>Examples:</strong> Tools Guide Overview (60 links), Content Performance Playbook (28 links)'},
   {n:'Metrics',c:55,color:C.metric,icon:'📊',desc:'What gets measured — views, conversions, retention, completion rates. Each metric recommends rubrics for scoring. 76 metric→rubric recommendations.',items:'<strong>Top:</strong> Completion Rate (26 links), tied to dashboards and A/B test outcomes'},
   {n:'Styles',c:48,color:C.style,icon:'🎨',desc:'Formatting overlays — tone, voice, structure constraints. From Clinical Teaching to Viral Social to Leadership Briefing. Applied via recipes without changing schema shape.',items:'<strong>48 styles:</strong> Assessment, Bestseller Pop Nonfiction, Campaign, Cheat Sheet, Clinical Teaching, Deep Dive, Explainer, Infographic, Listicle, Mnemonic, Procedural, Professional Thought Leadership, Viral Social, Workshop...'},
-  {n:'Tools',c:51,color:C.tool,icon:'🔧',desc:'Executable capabilities. 5 types: HTTP (29), MCP (2), internal (5), SQL (1), bash (1). Providers include Tavily, Firecrawl, Fal, Kling, v0, Replicate, Novu, Cohere, Voyage, Relevance, E2B, CodeSandbox, Vercel, GitHub.',items:'<strong>By risk:</strong> Level 1 (safe): Tavily, Novu Health. Level 2 (moderate): most tools. Level 3 (elevated): E2B Sandbox, GitHub Pages, Vercel Deploy, Novu Remediate'},
+  {n:'Tools',c:42,color:C.tool,icon:'🔧',desc:'Executable capabilities. 5 types: HTTP (29), MCP (2), internal (5), SQL (1), bash (1). Providers include Tavily, Firecrawl, Fal, Kling, v0, Replicate, Novu, Cohere, Voyage, Relevance, E2B, CodeSandbox, Vercel, GitHub.',items:'<strong>By risk:</strong> Level 1 (safe): Tavily, Novu Health. Level 2 (moderate): most tools. Level 3 (elevated): E2B Sandbox, GitHub Pages, Vercel Deploy, Novu Remediate'},
   {n:'Prompts',c:31,color:C.prompt,icon:'💬',desc:'Structured instruction contracts. 2 system prompts + 29 task prompts. Each has variables_json for parameterization. Content types wire to prompts via uses_prompt links (113 connections).',items:'<strong>System:</strong> Blog Post System, Playbook Step Executor. <strong>Task:</strong> Qbank Format, Article Structure, Social Hook, Visual Brief, Diagram Brief, Carousel, Citations, CTA, Flashcard Set, Rubric Judge...'},
   {n:'Channels',c:27,color:C.channel,icon:'📡',desc:'Delivery surface constraints. Web leads with 165 links. Instagram, Email, LinkedIn, App, Slides, Slack, Pinterest, Facebook, YouTube, X, Podcast, Push, SMS, WhatsApp and more.',items:'<strong>Web:</strong> 137 tag uses (dominant). <strong>Social:</strong> Instagram, LinkedIn, Facebook, X, Pinterest. <strong>Direct:</strong> Email, SMS, WhatsApp, Push, Slack'},
   {n:'Rubrics',c:25,color:C.rubric,icon:'✅',desc:'Evaluation criteria with weighted scoring. Content Quality and Engagement V1 are the hub rubrics. Domain-specific rubrics for QBank, Articles, Audio, Video, Carousel, Presentations.',items:'<strong>25 rubrics:</strong> Accuracy, Analysis, Article Quality, Assessment, Audio Quality, Carousel Quality, Clarity, Content Quality, Conversion, Engagement, Evidence, Pedagogy, Procedural Clarity, QBank Quality, Skill Quality, Tool Reliability, UI Quality...'},
@@ -464,7 +464,7 @@ appEl.innerHTML+=`<div style="font-size:9px;color:#3f3f46;margin-top:6px">+ 198 
 
 // ─── TOOLS LIST ───
 const toolsByType={
-  'HTTP (29)':[{n:'Brave Search',p:'brave',r:1},{n:'Tavily Search',p:'tavily',r:1},{n:'Firecrawl Scrape/Crawl',p:'firecrawl',r:2},{n:'Fal Image Gen/Edit',p:'fal',r:2},{n:'Kling Video Animate',p:'kling',r:2},{n:'v0 Generate/Scaffold',p:'v0',r:2},{n:'Replicate Image Edit',p:'replicate',r:2},{n:'Diagram Flowchart/Mermaid',p:'diagram',r:2},{n:'Audio Generate/Transcribe',p:'audio',r:2},{n:'E2B Code Sandbox',p:'e2b',r:3},{n:'Vercel Deploy',p:'vercel',r:3},{n:'GitHub Pages',p:'github',r:3},{n:'CodeSandbox Create/Update',p:'codesandbox',r:2},{n:'Cohere/Voyage Rerank',p:'cohere/voyage',r:2},{n:'Relevance AI (4 tools)',p:'relevance',r:2},{n:'Novu Trigger',p:'novu',r:2},{n:'Publish Web/Email/Social',p:'publish',r:2},{n:'Metabase Export',p:'metabase',r:2},{n:'A/B Test Create/Analyze',p:'ab_test',r:2},{n:'Calendar Schedule',p:'calendar',r:2},{n:'Metrics Fetch',p:'metrics',r:2}],
+  'HTTP (29)':[{n:'Tavily Search',p:'tavily',r:1},{n:'Firecrawl Scrape/Crawl',p:'firecrawl',r:2},{n:'Fal Image Gen/Edit',p:'fal',r:2},{n:'Kling Video Animate',p:'kling',r:2},{n:'v0 Generate/Scaffold',p:'v0',r:2},{n:'Replicate Image Edit',p:'replicate',r:2},{n:'Diagram Flowchart/Mermaid',p:'diagram',r:2},{n:'Audio Generate/Transcribe',p:'audio',r:2},{n:'E2B Code Sandbox',p:'e2b',r:3},{n:'Vercel Deploy',p:'vercel',r:3},{n:'GitHub Pages',p:'github',r:3},{n:'CodeSandbox Create/Update',p:'codesandbox',r:2},{n:'Cohere/Voyage Rerank',p:'cohere/voyage',r:2},{n:'Relevance AI (4 tools)',p:'relevance',r:2},{n:'Novu Trigger',p:'novu',r:2},{n:'Publish Web/Email/Social',p:'publish',r:2},{n:'Metabase Export',p:'metabase',r:2},{n:'A/B Test Create/Analyze',p:'ab_test',r:2},{n:'Calendar Schedule',p:'calendar',r:2},{n:'Metrics Fetch',p:'metrics',r:2}],
   'MCP (2)':[{n:'Browser Snapshot',p:'browser',r:2},{n:'Repo Write',p:'repo',r:2}],
   'Internal (5)':[{n:'Novu Workflows Sync',p:'novu',r:2},{n:'Novu Shadow Subscriber',p:'novu',r:2},{n:'Novu Ops Snapshot',p:'novu',r:2},{n:'Novu Ops Remediate',p:'novu',r:3},{n:'Novu Health',p:'novu',r:1}],
   'SQL (1)':[{n:'DB Query',p:'db',r:2}],
@@ -505,7 +505,7 @@ topLinked.forEach((e,i)=>{
 });
 
 // ─── TAG GRID (all 31 namespaces) ───
-const tags=[{n:'channel',v:248,d:'web:137, instagram:11, email:11'},{n:'action',v:210,d:'write:51, execute:43, build:35'},{n:'scope',v:733},{n:'status',v:732},{n:'modality',v:473},{n:'format',v:426},{n:'source',v:232},{n:'domain',v:227},{n:'family',v:115},{n:'stage',v:103},{n:'surface',v:78},{n:'partner',v:65},{n:'tool_type',v:52},{n:'provider',v:46},{n:'dept',v:16},{n:'persona_role',v:6},{n:'bundle_type',v:5},{n:'audience',v:2},{n:'app',v:0},{n:'brand',v:0},{n:'exam',v:0},{n:'initiative',v:0},{n:'persona',v:0},{n:'platform',v:0},{n:'priority',v:0},{n:'product',v:0},{n:'risk',v:0},{n:'segment',v:0},{n:'system',v:0},{n:'tier',v:0},{n:'topic',v:0}];
+const tags=[{n:'channel',v:248,d:'web:137, instagram:11, email:11'},{n:'action',v:192,d:'write:51, execute:43, build:35'},{n:'scope',v:733},{n:'status',v:732},{n:'modality',v:473},{n:'format',v:426},{n:'source',v:232},{n:'domain',v:227},{n:'family',v:115},{n:'stage',v:103},{n:'surface',v:78},{n:'partner',v:65},{n:'tool_type',v:52},{n:'provider',v:46},{n:'dept',v:16},{n:'persona_role',v:6},{n:'bundle_type',v:5},{n:'audience',v:2},{n:'app',v:0},{n:'brand',v:0},{n:'exam',v:0},{n:'initiative',v:0},{n:'persona',v:0},{n:'platform',v:0},{n:'priority',v:0},{n:'product',v:0},{n:'risk',v:0},{n:'segment',v:0},{n:'system',v:0},{n:'tier',v:0},{n:'topic',v:0}];
 const tgEl=document.getElementById('tagGrid');
 tags.slice(0,16).forEach(t=>{const op=Math.max(.08,t.v/733*.7);const d=document.createElement('div');d.className='tc';d.style.background=`rgba(139,92,246,${op})`;d.innerHTML=`<div class="tn">${t.n}</div><div class="tv">${t.v}</div>`;tgEl.appendChild(d)});
 
@@ -518,7 +518,7 @@ artifacts.forEach(a=>alEl.innerHTML+=`<div class="ai"><div class="ad" style="bac
 // ─── KB QUALITY ───
 new Chart(document.getElementById('kbChart'),{
   type:'bar',
-  data:{labels:['Snippet (70)','Distilled (70)','Full (70)'],datasets:[{label:'Avg Chars',data:[550,1501,2538],backgroundColor:['#f87171aa','#fbbf24aa','#4ade80aa'],borderRadius:4},{label:'Avg Tokens',data:[144,379,666],backgroundColor:['#f8717144','#fbbf2444','#4ade8044'],borderRadius:4}]},
+  data:{labels:['Snippet (64)','Distilled (64)','Full (64)'],datasets:[{label:'Avg Chars',data:[550,1501,2538],backgroundColor:['#f87171aa','#fbbf24aa','#4ade80aa'],borderRadius:4},{label:'Avg Tokens',data:[144,379,666],backgroundColor:['#f8717144','#fbbf2444','#4ade8044'],borderRadius:4}]},
   options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#94a3b8',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#64748b',font:{size:9}}}},plugins:{legend:{labels:{color:'#94a3b8',font:{size:9}}}}}
 });
 
@@ -531,7 +531,7 @@ new Chart(document.getElementById('tagsChart'),{
 });
 
 // ─── SYSTEM STATS ───
-const sysStats=[{l:'Runs',v:78},{l:'Run Steps',v:79},{l:'Evaluations',v:40},{l:'Templates',v:10},{l:'Automations',v:13},{l:'Campaigns',v:4}];
+const sysStats=[{l:'Runs',v:75},{l:'Run Steps',v:79},{l:'Evaluations',v:40},{l:'Templates',v:10},{l:'Automations',v:13},{l:'Campaigns',v:4}];
 const ssEl=document.getElementById('sysStats');
 sysStats.forEach(s=>{ssEl.innerHTML+=`<div style="text-align:center"><div style="font-size:20px;font-weight:900;color:#f4f4f5">${s.v}</div><div style="font-size:8px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-top:2px">${s.l}</div></div>`});
 
@@ -540,9 +540,9 @@ document.getElementById('arch').innerHTML=`
 <div class="arch">
   <div class="arch-r">
     <div class="arch-l"><h3 style="border-bottom:2px solid ${C.content_type};color:${C.content_type}">Content Pipeline</h3><div class="pills"><span class="pill" style="background:${C.content_type}">Content Types · 113</span><span class="pill" style="background:${C.recipe}">Recipes · 118</span><span class="pill" style="background:${C.schema}">Schemas · 21</span><span class="pill" style="background:${C.style}">Styles · 48</span><span class="pill" style="background:${C.channel}">Channels · 27</span></div></div>
-    <div class="arch-l"><h3 style="border-bottom:2px solid ${C.skill};color:${C.skill}">Capability Layer</h3><div class="pills"><span class="pill" style="background:${C.skill}">Skills · 163</span><span class="pill" style="background:${C.kb}">KB Items · 70</span><span class="pill" style="background:${C.tool}">Tools · 51</span><span class="pill" style="background:${C.prompt}">Prompts · 31</span><span class="pill" style="background:${C.agent}">Agents · 6</span></div></div>
+    <div class="arch-l"><h3 style="border-bottom:2px solid ${C.skill};color:${C.skill}">Capability Layer</h3><div class="pills"><span class="pill" style="background:${C.skill}">Skills · 160</span><span class="pill" style="background:${C.kb}">KB Items · 64</span><span class="pill" style="background:${C.tool}">Tools · 42</span><span class="pill" style="background:${C.prompt}">Prompts · 31</span><span class="pill" style="background:${C.agent}">Agents · 6</span></div></div>
   </div>
-  <div class="arch-mid">▼ entity_links (2,736) · entity_tags (4,500+) · entity_revisions (1,620) · kb_variants (192) ▼</div>
+  <div class="arch-mid">▼ entity_links (2,425) · entity_tags (4,500+) · entity_revisions (1,620) · kb_variants (192) ▼</div>
   <div class="arch-r">
     <div class="arch-l"><h3 style="border-bottom:2px solid ${C.metric};color:${C.metric}">Evaluation Layer</h3><div class="pills"><span class="pill" style="background:${C.metric}">Metrics · 55</span><span class="pill" style="background:${C.rubric}">Rubrics · 25</span><span class="pill" style="background:${C.lint_rule}">Lint Rules · 8</span><span class="pill" style="background:${C.lint_ruleset}">Lint Rulesets · 3</span></div></div>
     <div class="arch-l"><h3 style="border-bottom:2px solid ${C.playbook};color:${C.playbook}">Execution Layer</h3><div class="pills"><span class="pill" style="background:${C.playbook}">Playbooks · 13</span><span class="pill" style="background:${C.bundle}">Bundles · 11</span></div><div style="font-size:8px;color:#64748b;margin-top:6px">75 runs · 79 steps · 40 evals · 10 templates · 13 automations · 4 campaigns</div></div>
